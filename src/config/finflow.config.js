@@ -6,7 +6,8 @@
 const FINFLOW_CONFIG = {
   // ── AI CONFIGURATION ──────────────────────────────────────────
   // Get free API key from: https://ai.google.dev/
-  GEMINI_API_KEY: 'AIzaSyAmPtpq62iO8wxgX70x3RkRTaWBlCCXCIQ',
+  // Key is loaded from .env (VITE_GEMINI_API_KEY)
+  GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY || '',
   GEMINI_MODEL: 'gemini-1.5-flash',
 
   // ── RAG ENGINE SETTINGS ───────────────────────────────────────
