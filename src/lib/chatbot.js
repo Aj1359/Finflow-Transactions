@@ -510,6 +510,24 @@ Provide personalized, actionable advice based on their specific data.`;
       if (role !== 'admin') {
         return { text: `❌ **Access Denied.** Only admins can delete transactions.`, action: null };
       }
+
+      const lastMatch = userMsg.match(/last\s+(\d+)/i);
+      if (lastMatch) {
+         const n = parseInt(lastMatch[1]);
+         if (n > 0) {
+            const recentTxs = txs.slice(0, Math.min(n, 20));
+            if (recentTxs.length === 0) return { text: `📋 No transactions to delete.`, action: null };
+            
+            recentTxs.forEach(tx => {
+               if(onAction) onAction({ action: 'delete_transaction', tx });
+            });
+            return {
+               text: `✅ **Deleted last ${recentTxs.length} transaction(s):**\n${recentTxs.map((t, i) => `${i+1}. ${t.date} | ${t.desc} | ₹${t.amount}`).join('\n')}`,
+               action: null
+            };
+         }
+      }
+
       const amt = extractAmount(userMsg);
       let matching = [];
       if (amt) {
