@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Root App  |  src/App.jsx
-   ═══════════════════════════════════════════════════════════ */
+
 
 import { useState, useCallback, createContext, useContext } from 'react';
 import AppLayout from './components/layout/AppLayout';

@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Transactions Page  |  src/pages/TransactionsPage.jsx
-   ═══════════════════════════════════════════════════════════ */
+
 
 import { useState } from 'react';
 import { useStore } from '../store/useFinFlowStore';

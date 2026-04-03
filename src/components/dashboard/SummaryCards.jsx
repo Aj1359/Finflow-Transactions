@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Summary Cards  |  src/components/dashboard/SummaryCards.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { useEffect, useRef } from 'react';
 import { fmt, computeTotals } from '../../lib/utils';
 import { useStore } from '../../store/useFinFlowStore';

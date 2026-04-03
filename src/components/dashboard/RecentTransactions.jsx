@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Recent Transactions  |  src/components/dashboard/RecentTransactions.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { fmt } from '../../lib/utils';
 import { useStore } from '../../store/useFinFlowStore';
 

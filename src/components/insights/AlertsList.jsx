@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Alerts List  |  src/components/insights/AlertsList.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { fmt, computeTotals } from '../../lib/utils';
 import { useStore } from '../../store/useFinFlowStore';
 

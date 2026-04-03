@@ -1,9 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — RAG Chatbot Engine  |  src/lib/chatbot.js
-   Retrieval-Augmented Generation using transaction data +
-   optional Gemini API for AI-powered responses.
-   ═══════════════════════════════════════════════════════════ */
-
 'use strict';
 
 export const FinBot = (() => {

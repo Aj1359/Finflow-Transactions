@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Donut Chart  |  src/components/charts/DonutChart.jsx
-   ═══════════════════════════════════════════════════════════ */
+
 
 import { useRef, useEffect } from 'react';
 import { Chart } from 'chart.js/auto';

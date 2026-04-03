@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Header  |  src/components/layout/Header.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { useStore } from '../../store/useFinFlowStore';
 
 const SECTION_META = {

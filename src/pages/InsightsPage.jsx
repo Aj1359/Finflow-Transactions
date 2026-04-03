@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Insights Page  |  src/pages/InsightsPage.jsx
-   ═══════════════════════════════════════════════════════════ */
+
 
 import { useStore } from '../store/useFinFlowStore';
 import InsightCards from '../components/insights/InsightCards';

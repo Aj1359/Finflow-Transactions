@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Insight Cards  |  src/components/insights/InsightCards.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { fmt, computeTotals } from '../../lib/utils';
 import { useStore } from '../../store/useFinFlowStore';
 

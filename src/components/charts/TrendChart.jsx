@@ -1,6 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Trend Chart  |  src/components/charts/TrendChart.jsx
-   ═══════════════════════════════════════════════════════════ */
 
 import { useRef, useEffect } from 'react';
 import { Chart } from 'chart.js/auto';

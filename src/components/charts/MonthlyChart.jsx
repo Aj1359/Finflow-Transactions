@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Monthly Chart  |  src/components/charts/MonthlyChart.jsx
-   ═══════════════════════════════════════════════════════════ */
+
 
 import { useRef, useEffect } from 'react';
 import { Chart } from 'chart.js/auto';

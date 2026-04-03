@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Sidebar  |  src/components/layout/Sidebar.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { useStore } from '../../store/useFinFlowStore';
 
 export default function Sidebar({ chatOpen, onToggleChat }) {

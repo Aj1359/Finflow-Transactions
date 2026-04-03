@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Spending Gauge  |  src/components/dashboard/SpendingGauge.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { computeTotals } from '../../lib/utils';
 import { useStore } from '../../store/useFinFlowStore';
 

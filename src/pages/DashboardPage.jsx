@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Dashboard Page  |  src/pages/DashboardPage.jsx
-   ═══════════════════════════════════════════════════════════ */
+
 
 import { useStore } from '../store/useFinFlowStore';
 import SummaryCards from '../components/dashboard/SummaryCards';

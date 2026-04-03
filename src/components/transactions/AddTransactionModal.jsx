@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Add Transaction Modal  |  src/components/transactions/AddTransactionModal.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { useState } from 'react';
 import { uid, today, fmt, computeTotals } from '../../lib/utils';
 import { CATEGORIES } from '../../lib/constants';

@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Global Store  |  src/store/useFinFlowStore.js
-   React Context + Reducer for global state management.
-   ═══════════════════════════════════════════════════════════ */
 
 import { createContext, useContext, useReducer, useCallback } from 'react';
 import { SEED_DATA, LS_KEYS } from '../lib/constants';

@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Constants  |  src/lib/constants.js
-   ═══════════════════════════════════════════════════════════ */
+
 
 export const SEED_DATA = [
   { id:'t001', date:'2026-03-01', desc:'Monthly Salary',        category:'Salary',       type:'income',  amount:5500 },

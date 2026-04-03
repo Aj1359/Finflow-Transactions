@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Transaction Table  |  src/components/transactions/TransactionTable.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { useStore } from '../../store/useFinFlowStore';
 import { fmt } from '../../lib/utils';
 import { useAppToast } from '../../App';

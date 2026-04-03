@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Utility Functions  |  src/lib/utils.js
-   ═══════════════════════════════════════════════════════════ */
-
 import { CAT_COLORS_DARK, CAT_COLORS_LIGHT } from './constants';
 
 /** Format as Indian Rupee */

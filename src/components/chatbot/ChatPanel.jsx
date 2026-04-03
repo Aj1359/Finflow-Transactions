@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Chat Panel  |  src/components/chatbot/ChatPanel.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { useState, useRef, useEffect } from 'react';
 import { FinBot } from '../../lib/chatbot';
 import { useStore } from '../../store/useFinFlowStore';

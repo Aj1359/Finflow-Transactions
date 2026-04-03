@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Category Bars  |  src/components/dashboard/CategoryBars.jsx
-   ═══════════════════════════════════════════════════════════ */
-
 import { useState } from 'react';
 import { fmt, fmtShort, getCatColors } from '../../lib/utils';
 import { useStore } from '../../store/useFinFlowStore';

@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Chat Bubble  |  src/components/chatbot/ChatBubble.jsx
-   ═══════════════════════════════════════════════════════════ */
+
 
 import { useEffect, useState } from 'react';
 

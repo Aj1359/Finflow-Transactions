@@ -1,6 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   FinFlow — Toast  |  src/components/ui/Toast.jsx
-   ═══════════════════════════════════════════════════════════ */
 
 export default function Toast({ toasts }) {
   return (
