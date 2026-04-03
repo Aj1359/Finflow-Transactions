@@ -5,6 +5,7 @@ import AppLayout from './components/layout/AppLayout';
 import DashboardPage from './pages/DashboardPage';
 import TransactionsPage from './pages/TransactionsPage';
 import InsightsPage from './pages/InsightsPage';
+import BudgetPage from './pages/BudgetPage';
 import LandingPage from './pages/LandingPage';
 import Toast from './components/ui/Toast';
 import { useToast } from './hooks/useToast';
@@ -32,6 +33,7 @@ export default function App() {
         <DashboardPage />
         <TransactionsPage />
         <InsightsPage />
+        <BudgetPage />
       </AppLayout>
       <Toast toasts={toasts} />
     </ToastContext.Provider>

@@ -55,4 +55,5 @@ export const LS_KEYS = {
   ROLE:  'finflow_role',
   THEME: 'finflow_theme',
   GEMINI:'finflow_gemini_key',
+  BUDGETS: 'finflow_budgets',
 };

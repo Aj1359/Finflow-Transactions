@@ -511,18 +511,25 @@ Provide personalized, actionable advice based on their specific data.`;
         return { text: `❌ **Access Denied.** Only admins can delete transactions.`, action: null };
       }
 
-      const lastMatch = userMsg.match(/last\s+(\d+)/i);
-      if (lastMatch) {
-         const n = parseInt(lastMatch[1]);
+      // Enhanced delete last N logic
+      const lastNMatch = userMsg.match(/(?:delete|remove|undo|erase|clear).*(?:last|recent)\s+(\d+)/i) || 
+                         userMsg.match(/(?:last|recent)\s+(\d+).*(?:delete|remove|undo|erase|clear)/i);
+      
+      if (lastNMatch) {
+         const n = parseInt(lastNMatch[1]);
          if (n > 0) {
-            const recentTxs = txs.slice(0, Math.min(n, 20));
-            if (recentTxs.length === 0) return { text: `📋 No transactions to delete.`, action: null };
+            // Sort by date desc (if not already) and get top N
+            const sorted = [...txs].sort((a,b) => b.date.localeCompare(a.date));
+            const toDelete = sorted.slice(0, Math.min(n, 20));
             
-            recentTxs.forEach(tx => {
+            if (toDelete.length === 0) return { text: `📋 No transactions found to delete.`, action: null };
+            
+            toDelete.forEach(tx => {
                if(onAction) onAction({ action: 'delete_transaction', tx });
             });
+            
             return {
-               text: `✅ **Deleted last ${recentTxs.length} transaction(s):**\n${recentTxs.map((t, i) => `${i+1}. ${t.date} | ${t.desc} | ₹${t.amount}`).join('\n')}`,
+               text: `✅ **Deleted!** Successfully removed the ${toDelete.length} most recent transaction(s).`,
                action: null
             };
          }

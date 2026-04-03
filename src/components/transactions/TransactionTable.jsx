@@ -37,55 +37,92 @@ export default function TransactionTable() {
   const arrow = key => sortKey === key ? (sortDir === 'asc' ? '↑' : '↓') : '↕';
 
   return (
-    <div className="table-wrap">
-      <div className="table-inner">
-        <table>
-          <thead>
-            <tr>
-              <th className={sortKey === 'date'   ? 'sorted' : ''} onClick={() => handleSort('date')}>Date <span className="sort-arrow">{arrow('date')}</span></th>
-              <th className={sortKey === 'desc'   ? 'sorted' : ''} onClick={() => handleSort('desc')}>Description <span className="sort-arrow">{arrow('desc')}</span></th>
-              <th className={sortKey === 'category' ? 'sorted' : ''} onClick={() => handleSort('category')}>Category <span className="sort-arrow">{arrow('category')}</span></th>
-              <th className={sortKey === 'type'   ? 'sorted' : ''} onClick={() => handleSort('type')}>Type <span className="sort-arrow">{arrow('type')}</span></th>
-              <th className={sortKey === 'amount' ? 'sorted' : ''} onClick={() => handleSort('amount')}>Amount <span className="sort-arrow">{arrow('amount')}</span></th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="tx-tbody">
-            {txs.length === 0 ? (
+    <>
+      {/* Desktop Table */}
+      <div className="table-wrap">
+        <div className="table-inner">
+          <table>
+            <thead>
               <tr>
-                <td colSpan="6">
-                  <div className="empty-state">
-                    <div className="empty-icon">🔍</div>
-                    <h3>No Transactions Found</h3>
-                    <p>Try adjusting your filters or search query.</p>
-                  </div>
-                </td>
+                <th className={sortKey === 'date'   ? 'sorted' : ''} onClick={() => handleSort('date')}>Date <span className="sort-arrow">{arrow('date')}</span></th>
+                <th className={sortKey === 'desc'   ? 'sorted' : ''} onClick={() => handleSort('desc')}>Description <span className="sort-arrow">{arrow('desc')}</span></th>
+                <th className={sortKey === 'category' ? 'sorted' : ''} onClick={() => handleSort('category')}>Category <span className="sort-arrow">{arrow('category')}</span></th>
+                <th className={sortKey === 'type'   ? 'sorted' : ''} onClick={() => handleSort('type')}>Type <span className="sort-arrow">{arrow('type')}</span></th>
+                <th className={sortKey === 'amount' ? 'sorted' : ''} onClick={() => handleSort('amount')}>Amount <span className="sort-arrow">{arrow('amount')}</span></th>
+                <th>Actions</th>
               </tr>
-            ) : txs.map(t => {
-              const dateStr = new Date(t.date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-              return (
-                <tr key={t.id} data-id={t.id}>
-                  <td>{dateStr}</td>
-                  <td>{t.desc}</td>
-                  <td><span className="cat-pill">{t.category}</span></td>
-                  <td><span className={`tx-type-badge type-${t.type}`}>{t.type === 'income' ? '⬆' : '⬇'} {t.type}</span></td>
-                  <td className={t.type === 'income' ? 'tx-amount-income' : 'tx-amount-expense'}>{t.type === 'income' ? '+' : '-'}{fmt(t.amount)}</td>
-                  <td>
-                    {role === 'admin'
-                      ? <button className="btn btn-danger" onClick={() => handleDelete(t.id)}>🗑 Delete</button>
-                      : <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>—</span>
-                    }
+            </thead>
+            <tbody id="tx-tbody">
+              {txs.length === 0 ? (
+                <tr>
+                  <td colSpan="6">
+                    <div className="empty-state">
+                      <div className="empty-icon">🔍</div>
+                      <h3>No Transactions Found</h3>
+                      <p>Try adjusting your filters or search query.</p>
+                    </div>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ) : txs.map(t => {
+                const dateStr = new Date(t.date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                return (
+                  <tr key={t.id} data-id={t.id}>
+                    <td>{dateStr}</td>
+                    <td>{t.desc}</td>
+                    <td><span className="cat-pill">{t.category}</span></td>
+                    <td><span className={`tx-type-badge type-${t.type}`}>{t.type === 'income' ? '⬆' : '⬇'} {t.type}</span></td>
+                    <td className={t.type === 'income' ? 'tx-amount-income' : 'tx-amount-expense'}>{t.type === 'income' ? '+' : '-'}{fmt(t.amount)}</td>
+                    <td>
+                      {role === 'admin'
+                        ? <button className="btn btn-danger" onClick={() => handleDelete(t.id)}>🗑 Delete</button>
+                        : <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>—</span>
+                      }
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Mobile Card List */}
+      <div className="tx-card-list">
+        {txs.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">🔍</div>
+            <h3>No Transactions Found</h3>
+          </div>
+        ) : txs.map(t => {
+          const dateStr = new Date(t.date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+          return (
+            <div key={t.id} className="tx-card">
+              <div className="tx-card-header">
+                <div>
+                  <div className="tx-card-desc">{t.desc}</div>
+                  <div className="tx-card-cat">{t.category}</div>
+                </div>
+                <div className={`tx-card-amount ${t.type === 'income' ? 'tx-amount-income' : 'tx-amount-expense'}`}>
+                  {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}
+                </div>
+              </div>
+              <div className="tx-card-footer">
+                <div className="tx-card-date">📅 {dateStr}</div>
+                {role === 'admin' && (
+                  <button className="btn btn-danger" style={{ padding: '4px 8px', fontSize: '0.7rem' }} onClick={() => handleDelete(t.id)}>
+                    🗑 Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       <div className="table-footer">
         <span id="tx-count">{txs.length} transaction{txs.length !== 1 ? 's' : ''}</span>
         <span style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>💾 Auto-saved to LocalStorage</span>
       </div>
-    </div>
+    </>
   );
 }

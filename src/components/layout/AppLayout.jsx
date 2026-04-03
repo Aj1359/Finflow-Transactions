@@ -89,6 +89,7 @@ function SidebarInner({ onToggleChat, onCloseSidebar }) {
           { sec: 'dashboard',    icon: '🏠', label: 'Dashboard' },
           { sec: 'transactions', icon: '💳', label: 'Transactions' },
           { sec: 'insights',     icon: '📊', label: 'Insights' },
+          { sec: 'budget',       icon: '🎯', label: 'Budget' },
         ].map(({ sec, icon, label }) => (
           <div
             key={sec}

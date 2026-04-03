@@ -555,6 +555,47 @@ tr:last-child td { border-bottom: none; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
 
+/* ── TRANSACTION CARDS (Mobile) ─────────────────────────────── */
+.tx-card-list { display: none; flex-direction: column; gap: 12px; }
+.tx-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-card);
+}
+.tx-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.tx-card-body { display: flex; flex-direction: column; gap: 4px; }
+.tx-card-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; }
+.tx-card-desc { font-weight: 700; font-size: 0.95rem; color: var(--text-primary); }
+.tx-card-cat { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+.tx-card-amount { font-size: 1.1rem; font-weight: 800; }
+.tx-card-date { font-size: 0.75rem; color: var(--text-muted); }
+
+/* ── BUDGET PAGE ────────────────────────────────────────────── */
+.budget-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.budget-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition);
+}
+.budget-card:hover { transform: translateY(-3px); }
+.budget-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.budget-card-header h3 { font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.budget-progress-wrap { margin: 18px 0; }
+.budget-progress-bar { height: 10px; background: var(--bg-input); border-radius: 5px; overflow: hidden; position: relative; }
+.budget-progress-fill { height: 100%; border-radius: 5px; transition: width 0.8s cubic-bezier(.22,.61,.36,1); }
+.budget-stats { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-muted); margin-top: 10px; font-weight: 500; }
+.budget-input-group { display: flex; gap: 8px; margin-top: 15px; }
+.budget-input { flex:1; background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; outline: none; }
+.budget-input:focus { border-color: var(--accent-purple); }
+
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .insights-grid { grid-template-columns: 1fr 1fr; }
@@ -566,15 +607,18 @@ tr:last-child td { border-bottom: none; }
   .insights-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {
+  .table-wrap { display: none; }
+  .tx-card-list { display: flex; }
   .sidebar { position:fixed; top:0; left:0; height:100%; transform:translateX(-100%); z-index:200; }
   .sidebar.open { transform:translateX(0); }
   .overlay-bg.open { display:block; }
-  .menu-toggle { display:flex; }
+  .menu-toggle { display:flex; align-items: center; justify-content: center; width: 42px; height: 42px; font-size: 1.4rem; padding: 0; }
   .summary-grid { grid-template-columns: 1fr; }
   .content { padding: 16px; }
   .chat-panel { width:calc(100vw - 32px); right:16px; }
   .gaugesection { flex-direction:column; }
 }
+
 @media (max-width: 480px) {
   .header { padding: 0 16px; }
   .form-row { grid-template-columns: 1fr; }
