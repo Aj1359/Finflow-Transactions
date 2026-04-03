@@ -4,7 +4,7 @@ export const FinBot = (() => {
 
   const INTENTS = [
     { name: 'add_income',  patterns: [/(?:add|create|record|log|entered|got).*(?:income|earn|deposit|salary|bonus|payment|credit)/i, /got paid|received|earned|salary|deposit|credited|added income/i] },
-    { name: 'add_expense', patterns: [/(?:add|create|record|log|entered|spent).*(?:expense|spend|bill|cost|pay|payment|paid|charge)/i, /spent|paid for|bought|purchase|bill|fee|cost me|charged/i] },
+    { name: 'add_expense', patterns: [/(?:add|create|record|log|entered|spent).*(?:expense|spend|bill|cost|pay|payment|paid|charge|bought|purchased)/i, /spent|paid for|bought|purchase|bill|fee|cost me|charged/i] },
     { name: 'balance',     patterns: [/balance|how much.*(have|left|do i have|remaining|available)/i, /total|net worth|how much money|current balance|savings/i] },
     { name: 'top_spend',   patterns: [/top spend|most spent|highest.*categor|where.*money.*going|biggest expense|spending breakdown|category breakdown/i] },
     { name: 'top_tx',      patterns: [/best.*(transaction|tx|income|expense)|top.*(transaction|tx|income|expense)|worthy|highest|biggest.*transaction|largest.*amount/i] },
@@ -16,6 +16,7 @@ export const FinBot = (() => {
     { name: 'search',      patterns: [/search|find|look for|show.*transaction|filter|where.*spend/i] },
     { name: 'comparison',  patterns: [/compare|vs|versus|difference|growth|change|increase|decrease between|month over month/i] },
     { name: 'forecast',    patterns: [/forecast|predict|project|estimate.*future|next month|trending|will spend/i] },
+    { name: 'delete_conv', patterns: [/delete.*conversation|clear.*chat|reset.*chat|remove.*history/i] },
     { name: 'delete',      patterns: [/delete|remove|undo|erase|clear.*transaction|forget|cancel.*transaction/i] },
     { name: 'improve_advice', patterns: [/how.*spend better|improve.*spending|what to improve/i, /could.*have spent better/i, /better spend/i] },
     { name: 'post_income_plan', patterns: [/received.*(income|salary).*how/i, /got.*(income|salary).*how/i, /what to do with.*salary/i, /now that i.*(received|got)/i] },
@@ -35,7 +36,7 @@ export const FinBot = (() => {
   }
 
   function extractAmount(text) {
-    const m = text.match(/(?:₹|rs|rs\.)?[\s]*(\d[\d,\.]*)[\s]*(?:k|K|thousand|crore)?/);
+    const m = text.match(/(?:₹|rs|rs\.|inr)?[\s]*(\d[\d,\.]*)[\s]*(?:k|K|thousand|crore)?/i);
     if (!m) return null;
     let val = parseFloat(m[1].replace(/,/g, ''));
     if (/k|K|thousand/i.test(m[0])) val *= 1000;
@@ -48,16 +49,16 @@ export const FinBot = (() => {
     for (const c of cats) {
       if (new RegExp(c, 'i').test(text)) return c;
     }
-    if (/grocer|restaurant|cafe|coffee|lunch|dinner|food/i.test(text)) return 'Food';
-    if (/rent|house|apartment|mortgage/i.test(text)) return 'Housing';
-    if (/uber|ola|fuel|petrol|bus|metro|cab/i.test(text)) return 'Transport';
-    if (/netflix|spotify|movie|game|outing/i.test(text)) return 'Entertainment';
-    if (/doctor|hospital|medicine|gym|pharma/i.test(text)) return 'Health';
-    if (/course|book|study|tuition/i.test(text)) return 'Education';
-    if (/amazon|flipkart|shopping|clothes|shoes/i.test(text)) return 'Shopping';
-    if (/electric|water|gas|internet|phone bill/i.test(text)) return 'Utilities';
-    if (/freelance|client|project|contract/i.test(text)) return 'Freelance';
-    if (/divid|stock|mutual fund|invest/i.test(text)) return 'Investments';
+    if (/swiggy|zomato|grocer|restaurant|cafe|coffee|lunch|dinner|food|eat|meal|blinkit|zepto/i.test(text)) return 'Food';
+    if (/rent|house|apartment|mortgage|emi|broker/i.test(text)) return 'Housing';
+    if (/uber|ola|fuel|petrol|bus|metro|cab|taxi|rapido|petroleum/i.test(text)) return 'Transport';
+    if (/netflix|spotify|movie|game|outing|pvr|club|pub/i.test(text)) return 'Entertainment';
+    if (/doctor|hospital|medicine|gym|pharma|tata 1mg|dentist/i.test(text)) return 'Health';
+    if (/course|book|study|tuition|udemy|coursera|college/i.test(text)) return 'Education';
+    if (/amazon|flipkart|shopping|clothes|shoes|myntra|ajio|zara/i.test(text)) return 'Shopping';
+    if (/electric|water|gas|internet|phone bill|recharge|jio|airtel|vi|bescom/i.test(text)) return 'Utilities';
+    if (/freelance|client|project|contract|upwork|fiverr/i.test(text)) return 'Freelance';
+    if (/divid|stock|mutual fund|invest|zerodha|groww|upstox|crypto/i.test(text)) return 'Investments';
     return 'Other';
   }
 
@@ -154,6 +155,18 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
     txs.filter(t=>t.type==='expense').forEach(t=>{ catMap[t.category]=(catMap[t.category]||0)+t.amount; });
     const topCat = Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0];
     function healthEmoji(p) { return p < 50 ? '🟢' : p < 75 ? '🟡' : '🔴'; }
+
+    // Check for affordability queries
+    if (/can.*(afford|buy|purchase|get)/i.test(userMsg)) {
+      const amt = extractAmount(userMsg);
+      if (amt) {
+        const canAfford = amt <= balance;
+        const remaining = balance - amt;
+        return canAfford 
+          ? `✅ **Yes, you can!**\nYou have ${fmtN(balance)} available. After spending ${fmtN(amt)}, you'll still have **${fmtN(remaining)}** left. ${remaining < (income * 0.1) ? '\n⚠️ *Note: This will leave your savings quite low.*' : ''}`
+          : `❌ **No, it's out of reach.**\nThis costs ${fmtN(amt)}, but your current balance is **${fmtN(balance)}**. You are short by ${fmtN(amt - balance)}.`;
+      }
+    }
 
     switch(intent) {
       case 'balance':
@@ -399,6 +412,7 @@ Provide personalized, actionable advice based on their specific data.`;
   }
 
   let pendingTx = null;
+  let pendingDelete = null;
 
   async function processMessage(userMsg, txs, onAction, role = 'admin') {
     // Interactive State Handling (Red Zone Confirmation)
@@ -414,6 +428,23 @@ Provide personalized, actionable advice based on their specific data.`;
       } else {
         pendingTx = null;
         return { text: `❌ **Cancelled.** Expense not added.`, action: null };
+      }
+    }
+
+    if (pendingDelete) {
+      if (/^(yes|y|sure|ok|do it|confirm|yeah|yep)/i.test(userMsg.trim())) {
+        const txsToDelete = pendingDelete;
+        pendingDelete = null;
+        txsToDelete.forEach(tx => {
+          if (onAction) onAction({ action: 'delete_transaction', tx });
+        });
+        return {
+          text: `✅ **Confirmed!** Successfully removed **${txsToDelete.length}** transaction(s).`,
+          action: null
+        };
+      } else {
+        pendingDelete = null;
+        return { text: `❌ **Cancelled.** No transactions were deleted.`, action: null };
       }
     }
 
@@ -518,18 +549,14 @@ Provide personalized, actionable advice based on their specific data.`;
       if (lastNMatch) {
          const n = parseInt(lastNMatch[1]);
          if (n > 0) {
-            // Sort by date desc (if not already) and get top N
             const sorted = [...txs].sort((a,b) => b.date.localeCompare(a.date));
             const toDelete = sorted.slice(0, Math.min(n, 20));
             
             if (toDelete.length === 0) return { text: `📋 No transactions found to delete.`, action: null };
             
-            toDelete.forEach(tx => {
-               if(onAction) onAction({ action: 'delete_transaction', tx });
-            });
-            
+            pendingDelete = toDelete;
             return {
-               text: `✅ **Deleted!** Successfully removed the ${toDelete.length} most recent transaction(s).`,
+               text: `⚠️ **Confirm Deletion**\nAre you sure you want to delete the most recent **${toDelete.length}** transaction(s)?\n\n${toDelete.map((t,i)=>`${i+1}. ${t.date} | ${t.desc} | ₹${t.amount}`).join('\n')}\n\nType **Yes** to confirm or **No** to cancel.`,
                action: null
             };
          }
@@ -558,6 +585,11 @@ Provide personalized, actionable advice based on their specific data.`;
         text: `🔍 Found ${matching.length} matching transactions:\n${matching.map((t,i)=>`${i+1}. ${t.date} | ${t.desc} | ₹${t.amount}`).join('\n')}\n\nBe more specific (use date or exact amount)`,
         action: null
       };
+    }
+
+    if (intent === 'delete_conv') {
+      if (onAction) onAction({ action: 'clear_chat' });
+      return { text: '🗑 **Conversation Cleared!** I have wiped the history for you.', action: { action: 'clear_chat' } };
     }
 
     return { text: localResponse(intent, userMsg, txs, role), action: null };

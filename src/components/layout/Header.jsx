@@ -18,32 +18,33 @@ export default function Header({ onOpenSidebar }) {
 
   return (
     <header className="header">
-      <button className="menu-toggle" id="menu-toggle" aria-label="Open menu" onClick={onOpenSidebar}>
-        ☰
-      </button>
+      <div className="header-left">
+        <button className="menu-toggle" id="menu-toggle" aria-label="Open menu" onClick={onOpenSidebar}>
+          ☰
+        </button>
+        <div className="header-brand-mobile">
+          <span className="brand-dot" />
+          <span className="brand-name">FinFlow</span>
+        </div>
+      </div>
 
-      <div className="header-title">
+      <div className="header-title desktop-only">
         <h1>{title}</h1>
         <span>{subtitle}</span>
       </div>
 
       <div className="header-controls">
-        {/* Role Switcher */}
-        <div className="role-select-wrap">
-          <label htmlFor="role-select">Role:</label>
-          <select
-            id="role-select"
-            className="role-select"
-            value={role}
-            onChange={e => setRole(e.target.value)}
-          >
-            <option value="admin">👑 Admin</option>
-            <option value="viewer">👁 Viewer</option>
-          </select>
-        </div>
+        <select
+          id="role-select"
+          className="role-select-pill"
+          value={role}
+          onChange={e => setRole(e.target.value)}
+        >
+          <option value="admin">Admin</option>
+          <option value="viewer">Viewer</option>
+        </select>
 
-        {/* Dark/Light Toggle */}
-        <button className="btn-icon" id="theme-btn" title="Toggle theme" aria-label="Toggle theme" onClick={toggleTheme}>
+        <button className="theme-toggle-compact" id="theme-btn" title="Toggle theme" aria-label="Toggle theme" onClick={toggleTheme}>
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
       </div>

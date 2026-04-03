@@ -14,10 +14,14 @@ function markdownToHtml(text) {
 export default function ChatPanel({ open, onClose }) {
   const { state, addTx, deleteTx } = useStore();
   const toast = useAppToast();
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('finflow_chat_history');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [clearConfirm, setClearConfirm] = useState(false);
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('finflow_gemini_key') || '');
   const [aiMode, setAiMode] = useState(() => {
     const k = localStorage.getItem('finflow_gemini_key') || FINFLOW_CONFIG.GEMINI_API_KEY || '';
@@ -27,15 +31,31 @@ export default function ChatPanel({ open, onClose }) {
   const inputRef = useRef(null);
 
   useEffect(() => {
+    localStorage.setItem('finflow_chat_history', JSON.stringify(messages));
+    if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
+  }, [messages]);
+
+  useEffect(() => {
     if (open && messages.length === 0) {
-      appendBot('Welcome to **FinBot**, your enterprise financial assistant.\n\nI am equipped to provide deep insights into your financial data. How may I assist you today?\n\nTry: **"Show budget plan"** or **"What is my balance?"**');
+      const welcome = { 
+        id: 'welcome', 
+        role: 'bot', 
+        text: 'Welcome to **FinBot**, your enterprise financial assistant.\n\nI am equipped to provide deep insights into your financial data. How may I assist you today?\n\nTry: **"Show budget plan"** or **"What is my balance?"**' 
+      };
+      setMessages([welcome]);
     }
-    if (open) setTimeout(() => inputRef.current?.focus(), 300);
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 300);
+      setClearConfirm(false);
+    }
   }, [open]);
 
+  // Use this effect only for scrolling if needed, but the merged one above is better
+  /*
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages]);
+  */
 
   const appendBot = (text, isTyping = false) => {
     setMessages(prev => [...prev, { id: Date.now() + Math.random(), role: 'bot', text, isTyping }]);
@@ -64,6 +84,9 @@ export default function ChatPanel({ open, onClose }) {
         if (act.action === 'delete_transaction' && act.tx) {
           deleteTx(act.tx.id);
           toast(`FinBot deleted: ${act.tx.desc}`, 'success');
+        }
+        if (act.action === 'clear_chat') {
+          clearChatDirect();
         }
       }, state.role);
       removeTyping();
@@ -105,9 +128,20 @@ export default function ChatPanel({ open, onClose }) {
     toast(apiKey ? '✅ Gemini API key saved! AI mode activated.' : '⚡ Switched to local RAG mode.', 'success');
   };
 
-  const clearChat = () => {
+  const clearChatDirect = () => {
     setMessages([]);
+    localStorage.removeItem('finflow_chat_history');
     appendBot('Chat cleared! Ask me anything 💬');
+    setClearConfirm(false);
+  };
+
+  const handleClearRequest = () => {
+    if (clearConfirm) {
+      clearChatDirect();
+    } else {
+      setClearConfirm(true);
+      setTimeout(() => setClearConfirm(false), 3000);
+    }
   };
 
   return (
@@ -124,7 +158,14 @@ export default function ChatPanel({ open, onClose }) {
         </div>
         <div className="chat-header-actions">
           <button className="chat-head-btn" title="API Settings" onClick={() => setSettingsOpen(v => !v)}>⚙️</button>
-          <button className="chat-head-btn" title="Clear chat" onClick={clearChat}>🗑</button>
+          <button 
+            className={`chat-head-btn ${clearConfirm ? 'confirming' : ''}`} 
+            title={clearConfirm ? "Click again to confirm" : "Clear chat"} 
+            onClick={handleClearRequest}
+            style={clearConfirm ? { background: 'var(--accent-red)', color: '#fff' } : {}}
+          >
+            {clearConfirm ? '🗑 ?' : '🗑'}
+          </button>
           <button className="chat-head-btn" onClick={onClose} title="Close">✕</button>
         </div>
       </div>
