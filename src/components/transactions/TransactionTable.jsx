@@ -43,9 +43,9 @@ export default function TransactionTable() {
           <thead>
             <tr>
               <th className={sortKey === 'date'   ? 'sorted' : ''} onClick={() => handleSort('date')}>Date <span className="sort-arrow">{arrow('date')}</span></th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Type</th>
+              <th className={sortKey === 'desc'   ? 'sorted' : ''} onClick={() => handleSort('desc')}>Description <span className="sort-arrow">{arrow('desc')}</span></th>
+              <th className={sortKey === 'category' ? 'sorted' : ''} onClick={() => handleSort('category')}>Category <span className="sort-arrow">{arrow('category')}</span></th>
+              <th className={sortKey === 'type'   ? 'sorted' : ''} onClick={() => handleSort('type')}>Type <span className="sort-arrow">{arrow('type')}</span></th>
               <th className={sortKey === 'amount' ? 'sorted' : ''} onClick={() => handleSort('amount')}>Amount <span className="sort-arrow">{arrow('amount')}</span></th>
               <th>Actions</th>
             </tr>

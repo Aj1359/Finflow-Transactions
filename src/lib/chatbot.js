@@ -17,6 +17,9 @@ export const FinBot = (() => {
     { name: 'comparison',  patterns: [/compare|vs|versus|difference|growth|change|increase|decrease between|month over month/i] },
     { name: 'forecast',    patterns: [/forecast|predict|project|estimate.*future|next month|trending|will spend/i] },
     { name: 'delete',      patterns: [/delete|remove|undo|erase|clear.*transaction|forget|cancel.*transaction/i] },
+    { name: 'improve_advice', patterns: [/how.*spend better|improve.*spending|what to improve/i, /could.*have spent better/i, /better spend/i] },
+    { name: 'post_income_plan', patterns: [/received.*(income|salary).*how/i, /got.*(income|salary).*how/i, /what to do with.*salary/i, /now that i.*(received|got)/i] },
+    { name: 'excessive_warnings', patterns: [/drained|worthless|excessive|warning.*excess|wasted/i, /mark expense which drained/i] },
     { name: 'help',        patterns: [/help|what can you|commands|hi|hello|hey|assist|support|guide|tutorial/i] },
   ];
 
@@ -99,14 +102,20 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
 `;
   }
 
-  function buildBudgetPlan(txs) {
+  function buildBudgetPlan(txs, userAmt) {
     const cfg = window.FINFLOW_CONFIG || {};
     const months = cfg.BUDGET_ANALYSIS_MONTHS || 3;
     const allMonthsInData = [...new Set(txs.map(t => t.date.slice(0,7)))].sort();
     const analysisMonths = allMonthsInData.slice(-Math.max(months, 1));
-    const avgInc = analysisMonths.length > 0
-      ? analysisMonths.map(m => txs.filter(t=>t.type==='income'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0)).reduce((a,b)=>a+b,0) / analysisMonths.length
-      : 0;
+    
+    let avgInc = userAmt; 
+    let basisText = userAmt ? `given input` : `last ${analysisMonths.length} month${analysisMonths.length!==1?'s':''} average income`;
+    
+    if (!avgInc) {
+      avgInc = analysisMonths.length > 0
+        ? analysisMonths.map(m => txs.filter(t=>t.type==='income'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0)).reduce((a,b)=>a+b,0) / analysisMonths.length
+        : 0;
+    }
     const catMap = {};
     const recentTxs = txs.filter(t => t.type==='expense' && analysisMonths.some(m=>t.date.startsWith(m)));
     recentTxs.forEach(t => { catMap[t.category] = (catMap[t.category]||0) + t.amount; });
@@ -119,7 +128,7 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
     const budget20 = avgInc * 0.20;
     const fmtN = n => `₹${Math.round(n).toLocaleString('en-IN')}`;
     const lines = [];
-    lines.push(`📊 **Budget Plan** (based on last ${analysisMonths.length} month${analysisMonths.length!==1?'s':''} average income: ${fmtN(avgInc)})`);
+    lines.push(`📊 **Budget Plan** (based on ${basisText}: ${fmtN(avgInc)})`);
     lines.push('');
     lines.push('**50/30/20 Rule Recommendation:**');
     lines.push(`• **Needs** (50%): ${fmtN(budget50)} → You spent ${fmtN(needs)} ${needs>budget50?'⚠️ Over!':'✅ Good'}`);
@@ -230,13 +239,16 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
         return `📈 **Expense Forecast (Next Month):**\n• Average Monthly: ${fmtN(avgMonthlyExp)}\n• Trend: ${trend} 📊\n• Projected: ${fmtN(projected)}\n\n💡 **Tip:** Budget around ${fmtN(projected)} to be safe.`;
       }
 
-      case 'budget':
-        return buildBudgetPlan(txs);
+      case 'budget': {
+        const amt = extractAmount(userMsg);
+        return buildBudgetPlan(txs, amt || null);
+      }
 
       case 'insight': {
         const savingsRate = income>0?((balance/income)*100).toFixed(1):0;
         const recent = [...txs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
-        return `🔍 **Financial Insights**\n\n• **Savings Rate**: ${savingsRate}%\n• **Spending Health**: ${pct<50?'🟢 Healthy':pct<75?'🟡 Caution':'🔴 High Risk'} (${pct}%)\n• **Biggest Category**: ${topCat?topCat[0]+' ('+fmtN(topCat[1])+')':'N/A'}\n• **Transactions**: ${txs.length} total\n\n**Recent Activity:**\n${recent.map(t=>`• ${t.date}: ${t.desc} ${t.type==='income'?'+':'-'}${fmtN(t.amount)}`).join('\n')}`;
+        const insightCategoriesText = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,3).map((c,i)=>`${i+1}. ${c[0]} (${fmtN(c[1])})`).join(', ') || 'N/A';
+        return `🔍 **Financial Insights**\n\n• **Savings Rate**: ${savingsRate}%\n• **Spending Health**: ${pct<50?'🟢 Healthy':pct<75?'🟡 Caution':'🔴 High Risk'} (${pct}%)\n• **Top Categories**: ${insightCategoriesText}\n• **Transactions**: ${txs.length} total\n\n**Recent Activity:**\n${recent.map(t=>`• ${t.date}: ${t.desc} ${t.type==='income'?'+':'-'}${fmtN(t.amount)}`).join('\n')}`;
       }
 
       case 'monthly': {
@@ -248,6 +260,60 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
           return `**${label}**: Inc ${fmtN(mI)} | Exp ${fmtN(mE)} | Saved ${fmtN(mI-mE)}`;
         });
         return `📅 **Monthly Breakdown:**\n${out.join('\n')}\n\n📈 Trend: ${txs.filter(t=>t.date.startsWith('2026-03')&&t.type==='expense').reduce((s,t)=>s+t.amount,0) < txs.filter(t=>t.date.startsWith('2026-02')&&t.type==='expense').reduce((s,t)=>s+t.amount,0) ? 'Expenses ↓ down this month ✅':'Expenses ↑ up this month ⚠️'}`;
+      }
+
+      case 'improve_advice': {
+        const wants = ['Entertainment', 'Shopping', 'Other'];
+        const targetMonths = ['2026-03', '2026-02'];
+        let adviceHtml = `💡 **How to spend better based on recent months:**\n\n`;
+        targetMonths.forEach(m => {
+            const mExps = txs.filter(t=>t.type==='expense'&&t.date.startsWith(m));
+            if(mExps.length === 0) return;
+            const mWants = mExps.filter(t => wants.includes(t.category));
+            const wantTotal = mWants.reduce((s, t) => s + t.amount, 0);
+            const mTotal = mExps.reduce((s, t) => s + t.amount, 0);
+            if(mTotal > 0 && wantTotal / mTotal > 0.25) {
+               adviceHtml += `• In **${m}**, you spent heavily on Non-Essentials (${fmtN(wantTotal)}, ${(wantTotal/mTotal*100).toFixed(0)}% of expenses). Try reallocating this to savings.\n`;
+            } else {
+               adviceHtml += `• In **${m}**, your essential to non-essential ratio was good! Look for minor cuts in utility bills.\n`;
+            }
+        });
+        const worthless = txs.filter(t => t.type === 'expense' && wants.includes(t.category)).sort((a,b)=>b.amount-a.amount).slice(0, 3);
+        if(worthless.length > 0) {
+           adviceHtml += `\n🛒 **Transactions that drained your balance the most:**\n`;
+           worthless.forEach(t => adviceHtml += `  - **${t.category}**: ${fmtN(t.amount)} on ${t.date} for '${t.desc}'\n`);
+        }
+        return adviceHtml;
+      }
+
+      case 'post_income_plan': {
+        const lastIncome = txs.filter(t => t.type === 'income').sort((a,b)=>b.date.localeCompare(a.date))[0];
+        if(!lastIncome) return "❌ You haven't recorded any income yet!";
+        const amt = lastIncome.amount;
+        return `🎉 **Income Received!**\nYou recently got ${fmtN(amt)} as ${lastIncome.category}.\n\nHere is how you can effectively allocate it (50/30/20 Rule):\n• **Needs** (50%): ${fmtN(amt * 0.50)} (Rent, Groceries, Utilities)\n• **Wants** (30%): ${fmtN(amt * 0.30)} (Entertainment, Shopping)\n• **Savings/Invest** (20%): ${fmtN(amt * 0.20)} (Emergency fund, Stocks)\n\n💡 Try to automate moving the 20% to your savings right away!`;
+      }
+
+      case 'excessive_warnings': {
+        let warnings = `🚨 **Excessive Spending Alerts:**\n\n`;
+        const categoryExtremes = {};
+        txs.filter(t=>t.type==='expense').forEach(t=>{ categoryExtremes[t.category] = (categoryExtremes[t.category]||0) + t.amount; });
+        const triggerPercent = 0.35; 
+        let hasWarning = false;
+        Object.entries(categoryExtremes).forEach(([cat, val]) => {
+           if(income > 0 && val / income > triggerPercent) {
+              warnings += `⚠️ **${cat}** consumed ${((val/income)*100).toFixed(0)}% of your total income!\n`;
+              hasWarning = true;
+           }
+        });
+        const worthlessCats = ['Entertainment', 'Shopping'];
+        const worthlessSpend = txs.filter(t=>worthlessCats.includes(t.category)).reduce((s,t)=>s+t.amount,0);
+        if(income > 0 && worthlessSpend / income > 0.15) {
+           warnings += `📉 You had a massive income drain on **Shopping & Entertainment** (${fmtN(worthlessSpend)}). These are "worthless" items when in excess!\n`;
+           hasWarning = true;
+        }
+
+        if(!hasWarning) return `✅ No excessive warnings. You are managing your money well!`;
+        return warnings;
       }
 
       case 'help': {
