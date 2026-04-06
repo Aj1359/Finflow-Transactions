@@ -37,17 +37,17 @@ export const CATEGORIES = [
 ];
 
 export const CAT_COLORS_LIGHT = {
-  Salary:'#4f46e5',     Freelance:'#06b6d4',    Investments:'#10b981',
+  Salary:'#7c3aed',     Freelance:'#06b6d4',    Investments:'#10b981',
   Housing:'#f97316',    Food:'#f59e0b',          Transport:'#8b5cf6',
   Utilities:'#ec4899',  Entertainment:'#14b8a6', Health:'#ef4444',
   Education:'#6366f1',  Shopping:'#e879f9',      Other:'#94a3b8',
 };
 
 export const CAT_COLORS_DARK = {
-  Salary:'#818cf8',     Freelance:'#00f5ff',     Investments:'#00ff94',
-  Housing:'#fb923c',    Food:'#ffd60a',           Transport:'#c084fc',
-  Utilities:'#f472b6',  Entertainment:'#2dd4bf',  Health:'#ff4d6d',
-  Education:'#a5b4fc',  Shopping:'#e879f9',       Other:'#64748b',
+  Salary:'#cdbdff',     Freelance:'#00daf3',     Investments:'#b9c7df',
+  Housing:'#6833ea',    Food:'#948da2',           Transport:'#494456',
+  Utilities:'#31394d',  Entertainment:'#2d3449',  Health:'#ffb4ab',
+  Education:'#cebfff',  Shopping:'#abc3d9',       Other:'#64748b',
 };
 
 export const LS_KEYS = {

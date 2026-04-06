@@ -82,6 +82,10 @@ export default function ChatPanel({ open, onClose }) {
           addTx(act.tx);
           toast('FinBot added a transaction!', 'success');
         }
+        if (act.action === 'add_budget' && act.category) {
+          setBudget(act.category, act.amount);
+          toast(`Budget for ${act.category} updated!`, 'success');
+        }
         if (act.action === 'delete_transaction' && act.tx) {
           deleteTx(act.tx.id);
           toast(`FinBot deleted: ${act.tx.desc}`, 'success');
@@ -89,7 +93,7 @@ export default function ChatPanel({ open, onClose }) {
         if (act.action === 'clear_chat') {
           clearChatDirect();
         }
-      }, state.role);
+      }, state.role, state.budgets);
       removeTyping();
       appendBot(reply);
     } catch (err) {
@@ -111,7 +115,8 @@ export default function ChatPanel({ open, onClose }) {
     try {
       const { text: reply } = await FinBot.processMessage(msg, state.transactions, act => {
         if (act.action === 'add_transaction' && act.tx) { addTx(act.tx); toast('FinBot added a transaction!', 'success'); }
-      }, state.role);
+        if (act.action === 'add_budget' && act.category) { setBudget(act.category, act.amount); toast(`Budget updated!`, 'success'); }
+      }, state.role, state.budgets);
       removeTyping();
       appendBot(reply);
     } catch (err) {

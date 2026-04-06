@@ -24,28 +24,56 @@ export default function TrendChart() {
     const labels   = months.map(m => monthLabel(m));
     const incData  = months.map(m => incByMonth[m] || 0);
     const expData  = months.map(m => expByMonth[m] || 0);
-    const incColor = isDark ? '#00f5ff' : '#0ea5e9';
-    const expColor = isDark ? '#ff4d6d' : '#ef4444';
+    const incColor = isDark ? '#cdbdff' : '#7c3aed';
+    const expColor = isDark ? '#00daf3' : '#0ea5e9';
 
     if (chartRef.current) chartRef.current.destroy();
     chartRef.current = new Chart(canvasRef.current, {
-      type: 'line',
+      type: 'bar', // Better for vertical growth visualization
       data: {
         labels,
         datasets: [
-          { label: 'Income', data: incData, borderColor: incColor, backgroundColor: isDark ? 'rgba(0,245,255,0.1)' : 'rgba(14,165,233,0.1)', fill: true, tension: 0.45, pointBackgroundColor: incColor, pointRadius: 4, pointHoverRadius: 6, borderWidth: 2.5 },
-          { label: 'Expenses', data: expData, borderColor: expColor, backgroundColor: isDark ? 'rgba(255,77,109,0.1)' : 'rgba(239,68,68,0.1)', fill: true, tension: 0.45, pointBackgroundColor: expColor, pointRadius: 4, pointHoverRadius: 6, borderWidth: 2.5 },
+          {
+            label: 'Income',
+            data: incData,
+            backgroundColor: 'rgba(167, 139, 250, 0.85)',
+            borderRadius: 6,
+            barThickness: 16
+          },
+          {
+            label: 'Expenses',
+            data: expData,
+            backgroundColor: 'rgba(251, 191, 36, 0.85)',
+            borderRadius: 6,
+            barThickness: 16
+          }
         ]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { grid: { display: false }, ticks: { color: 'var(--text-muted)', font: { size: 10 } } },
+          y: { 
+            beginAtZero: true, 
+            grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
+            ticks: { color: 'var(--text-muted)', font: { size: 10 }, callback: v => '₹' + v.toLocaleString('en-IN') }
+          }
+        },
         plugins: {
           legend: { display: false },
-          tooltip: { backgroundColor: isDark ? '#111827' : '#ffffff', titleColor: isDark ? '#e8eaf6' : '#0d1117', bodyColor: isDark ? '#8892b0' : '#5a6478', borderColor: isDark ? '#1e2d4a' : '#e2e6f0', borderWidth: 1, padding: 12, cornerRadius: 12, callbacks: { label: ctx => ' ' + fmt(ctx.parsed.y) } }
+          tooltip: {
+            backgroundColor: '#050510',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            padding: 10,
+            displayColors: false,
+            callbacks: { label: ctx => ' ' + fmt(ctx.parsed.y) }
+          }
         },
-        scales: {
-          x: { grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }, ticks: { color: isDark ? '#4a5568' : '#8b92a5', font: { size: 11, family: 'Inter' } } },
-          y: { grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }, ticks: { color: isDark ? '#4a5568' : '#8b92a5', font: { size: 11, family: 'Inter' }, callback: v => fmtShort(v) } }
+        animation: {
+          duration: 1500,
+          easing: 'easeOutQuart'
         }
       }
     });
@@ -55,7 +83,7 @@ export default function TrendChart() {
   return (
     <div className="chart-card">
       <div className="chart-card-header">
-        <h3>📈 Balance Trend</h3>
+        <h3>Financial Momentum</h3>
         <span>Last 6 months</span>
       </div>
       <div className="chart-wrap">

@@ -24,8 +24,8 @@ export default function MonthlyChart() {
       data: {
         labels,
         datasets: [
-          { label: 'Income',   data: incData, backgroundColor: isDark ? 'rgba(0,255,148,0.7)'  : 'rgba(16,185,129,0.75)', borderRadius: 8, borderSkipped: false },
-          { label: 'Expenses', data: expData, backgroundColor: isDark ? 'rgba(255,77,109,0.7)' : 'rgba(239,68,68,0.75)',  borderRadius: 8, borderSkipped: false },
+          { label: 'Income',   data: incData, backgroundColor: isDark ? 'rgba(205, 189, 255, 0.8)' : 'rgba(124, 58, 237, 0.8)', borderRadius: 8, borderSkipped: false },
+          { label: 'Expenses', data: expData, backgroundColor: isDark ? 'rgba(0, 218, 243, 0.8)'   : 'rgba(6, 182, 212, 0.8)',  borderRadius: 8, borderSkipped: false },
         ]
       },
       options: {
@@ -46,7 +46,7 @@ export default function MonthlyChart() {
   return (
     <div className="chart-card">
       <div className="chart-card-header">
-        <h3>📊 Monthly Income vs Expenses</h3>
+        <h3>Monthly Ledger History</h3>
         <span>Last 4 months</span>
       </div>
       <div className="chart-wrap monthly-chart-wrap">

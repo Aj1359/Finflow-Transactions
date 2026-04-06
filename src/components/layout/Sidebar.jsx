@@ -18,13 +18,13 @@ export default function Sidebar({ chatOpen, onToggleChat, onCloseSidebar }) {
           <svg width="28" height="28" viewBox="0 0 100 100" style={{ borderRadius: 8, boxShadow: '0 4px 10px rgba(168,85,247,0.4)' }}>
             <defs>
               <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#2a0d45" />
-                <stop offset="100%" stopColor="#0b0318" />
+                <stop offset="0%" stopColor="#171f33" />
+                <stop offset="100%" stopColor="#0b1326" />
               </linearGradient>
               <linearGradient id="arrowGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#7c3aed" />
-                <stop offset="50%" stopColor="#c084fc" />
-                <stop offset="100%" stopColor="#ffffff" />
+                <stop offset="0%" stopColor="#5d21df" />
+                <stop offset="50%" stopColor="#6833ea" />
+                <stop offset="100%" stopColor="#cdbdff" />
               </linearGradient>
             </defs>
             <rect width="100" height="100" rx="22" fill="url(#bgGrad)" />

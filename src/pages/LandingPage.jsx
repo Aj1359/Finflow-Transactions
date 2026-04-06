@@ -16,78 +16,58 @@ export default function LandingPage({ onEnter }) {
   };
 
   return (
-    <div className="landing-container">
+    <div className="landing-container" data-theme="dark">
       <div className="landing-bg">
         <div className="grid-3d"></div>
-        <div className="floating-elements">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className="particle" style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              opacity: Math.random() * 0.5
-            }}></div>
-          ))}
-        </div>
+        <div className="floating-sphere"></div>
       </div>
 
-      <header className="landing-header">
-        <button className="theme-toggle-btn" onClick={toggleTheme}>
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
-      </header>
-
       <main className="landing-content">
-        <div className="logo-3d-wrap">
-          <div className="logo-3d">
-            <svg width="120" height="120" viewBox="0 0 100 100" style={{ filter: 'drop-shadow(0 15px 35px rgba(168,85,247,0.6))' }}>
+        <div className="landing-hero">
+          <div className="logo-executive">
+            <svg width="140" height="140" viewBox="0 0 100 100">
               <defs>
-                <linearGradient id="landingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#2a0d45" />
-                  <stop offset="100%" stopColor="#0b0318" />
+                <linearGradient id="execGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="var(--accent-purple)" />
+                  <stop offset="100%" stopColor="var(--accent-yellow)" />
                 </linearGradient>
-                <linearGradient id="landingArrow" x1="0%" y1="100%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#7c3aed" />
-                  <stop offset="50%" stopColor="#c084fc" />
-                  <stop offset="100%" stopColor="#ffffff" />
-                </linearGradient>
+                <filter id="execGlow">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
               </defs>
-              <rect width="100" height="100" rx="22" fill="url(#landingGrad)" />
-              <path d="M 15 70 C 10 95 60 90 70 60 C 78 40 85 20 85 20" fill="none" stroke="url(#landingArrow)" strokeWidth="12" strokeLinecap="round" />
-              <path d="M 88 15 L 65 25 L 80 40 Z" fill="#ffffff" />
+              <rect width="100" height="100" rx="30" fill="#0c0c12" stroke="url(#execGrad)" strokeWidth="2" />
+              <path d="M 25 70 C 20 90 65 85 75 55 C 82 35 88 15 88 15" fill="none" stroke="url(#execGrad)" strokeWidth="10" strokeLinecap="round" filter="url(#execGlow)" />
+              <path d="M 92 10 L 70 20 L 85 35 Z" fill="var(--accent-yellow)" />
             </svg>
           </div>
+          
+          <h1 className="executive-title">FinFlow</h1>
+          <p className="executive-tagline">ENTERPRISE-GRADE AI FINANCIAL INTELLIGENCE</p>
         </div>
 
-        <div className="hero-text">
-          <h1 className="landing-title">FinFlow</h1>
-          <p className="landing-subtitle">Enterprise-Grade AI Financial Intelligence</p>
-        </div>
-
-        <div className="role-selection">
-          <button className="role-card admin" onClick={() => handleEnter('admin')}>
-            <div className="role-icon">🛡️</div>
-            <div className="role-info">
+        <div className="executive-entries">
+          <div className="entry-card" onClick={() => handleEnter('admin')}>
+            <div className="entry-icon shield-glow">🛡️</div>
+            <div className="entry-text">
               <h3>Admin Entry</h3>
               <p>Full control over accounts & analytics</p>
             </div>
-            <div className="enter-arrow">→</div>
-          </button>
+          </div>
 
-          <button className="role-card viewer" onClick={() => handleEnter('viewer')}>
-            <div className="role-icon">👁️</div>
-            <div className="role-info">
+          <div className="entry-card" onClick={() => handleEnter('viewer')}>
+            <div className="entry-icon eye-glow">👁️</div>
+            <div className="entry-text">
               <h3>Viewer Entry</h3>
               <p>Real-time monitoring & insights only</p>
             </div>
-            <div className="enter-arrow">→</div>
-          </button>
+          </div>
+        </div>
+
+        <div className="landing-footer-minimal">
+          © 2026 FinFlow AI. Precision in every transaction.
         </div>
       </main>
-
-      <footer className="landing-footer">
-        <p>&copy; 2026 FinFlow AI. Precision in every transaction.</p>
-      </footer>
     </div>
   );
 }

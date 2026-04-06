@@ -43,7 +43,7 @@ export default function DonutChart() {
   return (
     <div className="chart-card">
       <div className="chart-card-header">
-        <h3>🍩 Spending by Category</h3>
+        <h3>Spending Category Breakdown</h3>
         <span>All time</span>
       </div>
       <div className="chart-wrap">

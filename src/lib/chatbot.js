@@ -63,28 +63,67 @@ export const FinBot = (() => {
   }
 
   function detectIntent(text) {
-    for (const { name, patterns } of INTENTS) {
-      if (patterns.some(p => p.test(text))) return name;
+    // 1. Add Budget Check
+    const budgetMatch = text.match(/(?:set|create|add|make).*budget.*for\s+([a-z\s]+)\s+(?:to|is|of)\s+?(?:₹|rs|inr)?\s*(\d[\d,\.]*)/i);
+    if (budgetMatch) {
+      return { 
+        action: 'add_budget', 
+        category: extractCategory(budgetMatch[1]), 
+        amount: parseFloat(budgetMatch[2].replace(/,/g, ''))
+      };
     }
-    return 'general';
+
+    // 2. Add Transaction Check
+    const amt = extractAmount(text);
+    if (amt && /(?:add|spent|record|log|spent|bought|purchased|income|salary|freelance)/i.test(text)) {
+      const type = /income|salary|freelance|gig/i.test(text) ? 'income' : 'expense';
+      return {
+        action: 'add_transaction',
+        tx: {
+          id: Date.now(),
+          date: new Date().toISOString().slice(0, 10),
+          desc: text.replace(/\d+|₹|rs|inr|add|spent|log|record|for|on/gi, '').trim() || (type === 'income' ? 'Income' : 'Expense'),
+          amount: amt,
+          category: extractCategory(text),
+          type
+        }
+      };
+    }
+
+    for (const { name, patterns } of INTENTS) {
+      if (patterns.some(p => p.test(text))) return { action: name };
+    }
+    return null;
   }
 
-  function buildContext(txs) {
+  function buildContext(txs, budgets = {}) {
     const cfg = window.FINFLOW_CONFIG || {};
     const limit = cfg.RAG_MAX_TRANSACTIONS || 50;
     const recent = [...txs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, limit);
     const income   = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
     const expenses = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
     const balance  = income - expenses;
+    
+    // Category Breakdown with Budget Comparison
+    const currentMonth = new Date().toISOString().slice(0, 7);
     const catMap = {};
-    txs.filter(t => t.type === 'expense').forEach(t => { catMap[t.category] = (catMap[t.category] || 0) + t.amount; });
-    const catSummary = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `  ${k}: ₹${v}`).join('\n');
+    txs.filter(t => t.type === 'expense' && t.date.startsWith(currentMonth)).forEach(t => { 
+      catMap[t.category] = (catMap[t.category] || 0) + t.amount; 
+    });
+    
+    const catSummary = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([k,v]) => {
+      const budget = budgets[k] || 0;
+      const status = budget > 0 ? (v > budget ? '!! OVER BUDGET !!' : `(Budget: ₹${budget})`) : '(No budget set)';
+      return `  ${k}: ₹${v} ${status}`;
+    }).join('\n');
+
     const months = ['2026-03','2026-02','2026-01'];
     const monthSummary = months.map(m => {
       const mInc = txs.filter(t=>t.type==='income'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
       const mExp = txs.filter(t=>t.type==='expense'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
       return `  ${m}: Income ₹${mInc}, Expenses ₹${mExp}, Saved ₹${mInc-mExp}`;
     }).join('\n');
+
     return `
 FINANCIAL DATA CONTEXT:
 Total Income: ₹${income}
@@ -92,13 +131,13 @@ Total Expenses: ₹${expenses}
 Net Balance: ₹${balance}
 Savings Rate: ${income > 0 ? ((balance/income)*100).toFixed(1) : 0}%
 
-SPENDING BY CATEGORY:
-${catSummary || '  No expenses yet'}
+CURRENT MONTH STATUS (${currentMonth}):
+${catSummary || '  No expenses recorded this month.'}
 
-MONTHLY SUMMARY (last 3 months):
+HISTORICAL MONTHS:
 ${monthSummary}
 
-RECENT TRANSACTIONS (last ${Math.min(recent.length, 10)}):
+RECENT TRANSACTIONS:
 ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.category} | ${t.desc} | ₹${t.amount}`).join('\n')}
 `;
   }
@@ -341,33 +380,27 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
 
   async function callGemini(userMsg, context) {
     const cfg = window.FINFLOW_CONFIG || {};
-    const key   = cfg.GEMINI_API_KEY;
-    const model = cfg.GEMINI_MODEL || 'gemini-1.5-flash';
-    if (!key || key.trim().length < 10) {
+        if (!key || key.trim().length < 10) {
       throw new Error('<span style="color:var(--accent-red)">✕</span> Invalid API Key: missing or too short');
     }
-    const systemPrompt = `You are FinBot, an expert personal finance assistant embedded in the FinFlow dashboard.
-Your role is to help users track expenses, understand spending patterns, plan budgets, and get actionable financial insights.
 
-CRITICAL INSTRUCTIONS:
-1. Always be concise, friendly, and professional
-2. Use ₹ for currency and Indian numbering
-3. When user asks to ADD a transaction, ALWAYS respond with ONLY a JSON object like:
-   {"action":"add_transaction","type":"expense","amount":500,"category":"Food","desc":"Grocery shopping","date":"2026-03-30"}
-4. For all other requests, provide a helpful analysis
-5. Use markdown for formatting with bold, bullet points, and emojis
-6. Always reference actual numbers from the provided financial data
+    const systemPrompt = `You are FinBot, an elite financial auditor and AI consultant within the FinFlow Enterprise Dashboard.
+Your mission is to provide deep-dive analytical audits of user spending versus their strategic budget allocations.
 
-USER'S FINANCIAL DATA:
+OPERATIONAL PROTOCOLS:
+1. BE ANALYTICAL: Don't just list numbers; find the "why". Compare category spending against limits.
+2. IDENTIFY LEAKAGE: Point out categories where spending is irrational or exceeds budget.
+3. ACTIONABLE GUIDANCE: Provide 2-3 high-impact steps to optimize liquidity.
+4. JSON COMMANDS: For adding transactions, output ONLY the JSON object.
+5. FORMATTING: Use professional Markdown with bold headings and structured lists.
+
+USER DATA CONTEXT:
 ${context}
 
-When analyzing:
-- If spending > 75% of income: <span style="color:var(--accent-yellow)">!</span> Red zone
-- If spending 50-75%: <span style="color:var(--accent-yellow); font-size:1.2em;"></span> Caution zone
-- If spending < 50%: <span style="color:var(--accent-green); font-size:1.2em;"></span> Safe zone
-
-Provide personalized, actionable advice based on their specific data.`;
-
+AUDIT GUIDELINES:
+- If Category Spend > Budget: Flag as "CRITICAL OVERRUN" with red indicators.
+- If Savings Rate < 20%: Recommend immediate "Austerity Measures".
+- Always maintain a professional, high-fidelity corporate tone.`;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
     const body = {
       system_instruction: { parts: [{ text: systemPrompt }] },
@@ -414,7 +447,7 @@ Provide personalized, actionable advice based on their specific data.`;
   let pendingTx = null;
   let pendingDelete = null;
 
-  async function processMessage(userMsg, txs, onAction, role = 'admin') {
+  async function processMessage(userMsg, txs, onAction, role = 'admin', budgets = {}) {
     // Interactive State Handling (Red Zone Confirmation)
     if (pendingTx) {
       if (/^(yes|y|sure|ok|do it|confirm|yeah|yep)/i.test(userMsg.trim())) {
@@ -449,7 +482,21 @@ Provide personalized, actionable advice based on their specific data.`;
     }
 
     const intent  = detectIntent(userMsg);
-    const context = buildContext(txs);
+    const context = buildContext(txs, budgets);
+
+    // 1. Natural Language / Local Fallback
+    if (intent) {
+      if (intent.action === 'add_transaction') {
+        if (role !== 'admin') return { text: "⚠️ Viewer mode: Cannot add transactions." };
+        onAction({ action: 'add_transaction', tx: intent.tx });
+        return { text: `✅ Added **${intent.tx.desc}** (${intent.tx.category}) for **${fmt(intent.tx.amount)}**.` };
+      }
+      if (intent.action === 'add_budget') {
+        if (role !== 'admin') return { text: "⚠️ Viewer mode: Cannot modify budgets." };
+        onAction({ action: 'add_budget', category: intent.category, amount: intent.amount });
+        return { text: `🎯 Target set! Budget for **${intent.category}** is now **${fmt(intent.amount)}**.` };
+      }
+    }
 
     const checkRedZone = (tx) => {
       if (tx.type !== 'expense') return false;

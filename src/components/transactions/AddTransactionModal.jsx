@@ -32,12 +32,32 @@ export default function AddTransactionModal({ open, onClose }) {
         toast(`Rejected: expense exceeds balance (${fmt(balance)})`, 'error');
         return;
       }
+
+      // Budget Warning logic
+      const budgetLimit = state.budgets[category] || 0;
+      if (budgetLimit > 0) {
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const spentThisMonth = state.transactions
+          .filter(t => t.type === 'expense' && t.category === category && t.date.startsWith(currentMonth))
+          .reduce((sum, t) => sum + Number(t.amount), 0);
+        
+        if (spentThisMonth + amt > budgetLimit) {
+          const confirmed = window.confirm(
+            `⚠️ Budget Alert: Adding this will put you over your ${category} budget!\n\n` +
+            `Current Spend: ${fmt(spentThisMonth)}\n` +
+            `Budget Limit: ${fmt(budgetLimit)}\n` +
+            `New Total: ${fmt(spentThisMonth + amt)}\n\n` +
+            `Proceed anyway?`
+          );
+          if (!confirmed) return;
+        }
+      }
     }
 
     const tx = { id: uid(), date, desc, category, type, amount: amt };
     addTx(tx);
     onClose();
-    toast(`Transaction "${desc}" added! ${type === 'income' ? '💰' : '💳'}`, 'success');
+    toast(`Transaction "${desc}" added!`, 'success');
     setForm({ desc: '', amount: '', date: today(), type: '', category: '' });
     setError('');
   };

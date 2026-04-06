@@ -18,6 +18,12 @@ export default function TransactionTable() {
   txs.sort((a, b) => {
     let va = a[sortKey], vb = b[sortKey];
     if (sortKey === 'amount') { va = Number(va); vb = Number(vb); }
+    if (sortKey === 'type') {
+      // Sort income above expense if desc, or vice versa
+      const scoreA = a.type === 'income' ? 1 : 0;
+      const scoreB = b.type === 'income' ? 1 : 0;
+      return sortDir === 'desc' ? scoreB - scoreA : scoreA - scoreB;
+    }
     if (va < vb) return sortDir === 'asc' ? -1 : 1;
     if (va > vb) return sortDir === 'asc' ? 1  : -1;
     return 0;
@@ -35,22 +41,34 @@ export default function TransactionTable() {
     toast('Transaction deleted successfully.', 'success');
   };
 
-  const arrow = key => sortKey === key ? (sortDir === 'asc' ? '↑' : '↓') : '↕';
+  const arrow = key => sortKey === key 
+    ? (sortDir === 'asc' ? <TrendingUp size={14} style={{ color: 'var(--accent-purple)' }} /> : <TrendingDown size={14} style={{ color: 'var(--accent-purple)' }} />) 
+    : <TrendingDown size={14} style={{ opacity: 0.2 }} />;
 
   return (
     <>
       {/* Desktop Table */}
-      <div className="table-wrap">
+      <div className="table-wrap premium-glow">
         <div className="table-inner">
-          <table>
+          <table className="stitch-table">
             <thead>
               <tr>
-                <th className={sortKey === 'date'   ? 'sorted' : ''} onClick={() => handleSort('date')}>Date <span className="sort-arrow">{arrow('date')}</span></th>
-                <th className={sortKey === 'desc'   ? 'sorted' : ''} onClick={() => handleSort('desc')}>Description <span className="sort-arrow">{arrow('desc')}</span></th>
-                <th className={sortKey === 'category' ? 'sorted' : ''} onClick={() => handleSort('category')}>Category <span className="sort-arrow">{arrow('category')}</span></th>
-                <th className={sortKey === 'type'   ? 'sorted' : ''} onClick={() => handleSort('type')}>Type <span className="sort-arrow">{arrow('type')}</span></th>
-                <th className={sortKey === 'amount' ? 'sorted' : ''} onClick={() => handleSort('amount')}>Amount <span className="sort-arrow">{arrow('amount')}</span></th>
-                <th>Actions</th>
+                <th className={sortKey === 'date' ? 'sorted' : ''} onClick={() => handleSort('date')}>
+                  <div className="th-content">Date {arrow('date')}</div>
+                </th>
+                <th className={sortKey === 'desc' ? 'sorted' : ''} onClick={() => handleSort('desc')}>
+                  <div className="th-content">Description {arrow('desc')}</div>
+                </th>
+                <th className={sortKey === 'category' ? 'sorted' : ''} onClick={() => handleSort('category')}>
+                  <div className="th-content">Category {arrow('category')}</div>
+                </th>
+                <th className={sortKey === 'type' ? 'sorted' : ''} onClick={() => handleSort('type')}>
+                  <div className="th-content">Type {arrow('type')}</div>
+                </th>
+                <th className={sortKey === 'amount' ? 'sorted' : ''} onClick={() => handleSort('amount')}>
+                  <div className="th-content">Amount {arrow('amount')}</div>
+                </th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody id="tx-tbody">
@@ -58,26 +76,34 @@ export default function TransactionTable() {
                 <tr>
                   <td colSpan="6">
                     <div className="empty-state">
-                      <div className="empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Search size={32} /></div>
-                      <h3>No Transactions Found</h3>
-                      <p>Try adjusting your filters or search query.</p>
+                      <div className="empty-icon"><Search size={48} color="var(--accent-purple)" /></div>
+                      <h3>No Transactions</h3>
+                      <p>Adjust filters to view records</p>
                     </div>
                   </td>
                 </tr>
               ) : txs.map(t => {
-                const dateStr = new Date(t.date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                const dateStr = new Date(t.date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
                 return (
-                  <tr key={t.id} data-id={t.id}>
-                    <td>{dateStr}</td>
-                    <td>{t.desc}</td>
-                    <td><span className="cat-pill">{t.category}</span></td>
-                    <td><span className={`tx-type-badge type-${t.type}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{t.type === 'income' ? <TrendingUp size={14} /> : <TrendingDown size={14} />} {t.type}</span></td>
-                    <td className={t.type === 'income' ? 'tx-amount-income' : 'tx-amount-expense'}>{t.type === 'income' ? '+' : '-'}{fmt(t.amount)}</td>
+                  <tr key={t.id} className="premium-row">
+                    <td><div className="cell-date"><Calendar size={12} /> {dateStr}</div></td>
+                    <td><div className="cell-desc">{t.desc}</div></td>
+                    <td><span className="cat-badge">{t.category}</span></td>
                     <td>
-                      {role === 'admin'
-                        ? <button className="btn btn-danger" onClick={() => handleDelete(t.id)} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Trash2 size={14} /> Delete</button>
-                        : <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>—</span>
-                      }
+                      <span className={`type-pill ${t.type}`}>
+                        {t.type === 'income' ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                        {t.type}
+                      </span>
+                    </td>
+                    <td className={`amount-cell ${t.type}`}>
+                      {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      {role === 'admin' && (
+                        <button className="delete-icon-btn" onClick={() => handleDelete(t.id)}>
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );

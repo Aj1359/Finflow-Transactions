@@ -12,7 +12,7 @@ function loadState() {
     return {
       transactions:  savedTx ? JSON.parse(savedTx) : [...SEED_DATA],
       role:          savedRole  || 'admin',
-      theme:         savedTheme || 'dark',
+      theme:         savedTheme || 'light',
       budgets:       savedBudgets ? JSON.parse(savedBudgets) : {},
       sortKey:       'date',
       sortDir:       'desc',
@@ -24,7 +24,7 @@ function loadState() {
   } catch {
     return {
       transactions: [...SEED_DATA],
-      role: 'admin', theme: 'dark', budgets: {},
+      role: 'admin', theme: 'light', budgets: {},
       sortKey: 'date', sortDir: 'desc',
       filterType: 'all', filterCat: 'all', search: '', activeSection: 'dashboard',
     };
