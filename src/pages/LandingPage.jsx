@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useFinFlowStore';
+import { Shield, Eye } from 'lucide-react';
+import Logo from '../components/ui/Logo';
 import './LandingPage.css';
 
 export default function LandingPage({ onEnter }) {
   const { state, setRole, setTheme } = useStore();
   const { theme } = state;
+
+  React.useEffect(() => {
+    setTheme('light');
+  }, [setTheme]);
 
   const handleEnter = (role) => {
     setRole(role);
@@ -31,21 +37,7 @@ export default function LandingPage({ onEnter }) {
       <main className="landing-content">
         <div className="landing-hero">
           <div className="logo-executive">
-            <svg width="140" height="140" viewBox="0 0 100 100">
-              <defs>
-                <linearGradient id="execGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="var(--accent-purple)" />
-                  <stop offset="100%" stopColor="var(--accent-yellow)" />
-                </linearGradient>
-                <filter id="execGlow">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-              </defs>
-              <rect width="100" height="100" rx="30" fill={theme === 'dark' ? '#0c0c12' : '#ffffff'} stroke="url(#execGrad)" strokeWidth="2" />
-              <path d="M 25 70 C 20 90 65 85 75 55 C 82 35 88 15 88 15" fill="none" stroke="url(#execGrad)" strokeWidth="10" strokeLinecap="round" filter="url(#execGlow)" />
-              <path d="M 92 10 L 70 20 L 85 35 Z" fill="var(--accent-yellow)" />
-            </svg>
+            <Logo size={120} theme={theme} />
           </div>
           
           <h1 className="executive-title">FinFlow</h1>
@@ -54,7 +46,7 @@ export default function LandingPage({ onEnter }) {
 
         <div className="executive-entries">
           <div className="entry-card" onClick={() => handleEnter('admin')}>
-            <div className="entry-icon shield-glow">🛡️</div>
+            <div className="entry-icon shield-glow"><Shield size={32} color="var(--accent-blue)" /></div>
             <div className="entry-text">
               <h3>Admin Entry</h3>
               <p>Full control over accounts & analytics</p>
@@ -62,7 +54,7 @@ export default function LandingPage({ onEnter }) {
           </div>
 
           <div className="entry-card" onClick={() => handleEnter('viewer')}>
-            <div className="entry-icon eye-glow">👁️</div>
+            <div className="entry-icon eye-glow"><Eye size={32} color="var(--accent-purple)" /></div>
             <div className="entry-text">
               <h3>Viewer Entry</h3>
               <p>Real-time monitoring & insights only</p>

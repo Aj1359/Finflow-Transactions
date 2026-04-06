@@ -44,10 +44,10 @@ export const CAT_COLORS_LIGHT = {
 };
 
 export const CAT_COLORS_DARK = {
-  Salary:'#cdbdff',     Freelance:'#00daf3',     Investments:'#b9c7df',
-  Housing:'#6833ea',    Food:'#948da2',           Transport:'#494456',
-  Utilities:'#31394d',  Entertainment:'#2d3449',  Health:'#ffb4ab',
-  Education:'#cebfff',  Shopping:'#abc3d9',       Other:'#64748b',
+  Salary:'#00f5ff',     Freelance:'#bc13fe',    Investments:'#32cd32',
+  Housing:'#ff00ff',    Food:'#ff6700',          Transport:'#1f51ff',
+  Utilities:'#00ff9f',  Entertainment:'#ccff00', Health:'#ff073a',
+  Education:'#9d00ff',  Shopping:'#00e5ff',      Other:'#64748b',
 };
 
 export const LS_KEYS = {

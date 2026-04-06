@@ -24,8 +24,8 @@ export default function MonthlyChart() {
       data: {
         labels,
         datasets: [
-          { label: 'Income',   data: incData, backgroundColor: isDark ? 'rgba(205, 189, 255, 0.8)' : 'rgba(124, 58, 237, 0.8)', borderRadius: 8, borderSkipped: false },
-          { label: 'Expenses', data: expData, backgroundColor: isDark ? 'rgba(0, 218, 243, 0.8)'   : 'rgba(6, 182, 212, 0.8)',  borderRadius: 8, borderSkipped: false },
+          { label: 'Income',   data: incData, backgroundColor: isDark ? 'rgba(0, 245, 255, 0.85)' : 'rgba(124, 58, 237, 0.8)', borderRadius: 8, borderSkipped: false, barThickness: 24 },
+          { label: 'Expenses', data: expData, backgroundColor: isDark ? 'rgba(255, 0, 255, 0.85)'   : 'rgba(6, 182, 212, 0.8)',  borderRadius: 8, borderSkipped: false, barThickness: 24 },
         ]
       },
       options: {
@@ -35,8 +35,8 @@ export default function MonthlyChart() {
           tooltip: { backgroundColor: isDark ? '#111827' : '#ffffff', titleColor: isDark ? '#e8eaf6' : '#0d1117', bodyColor: isDark ? '#8892b0' : '#5a6478', borderColor: isDark ? '#1e2d4a' : '#e2e6f0', borderWidth: 1, padding: 12, cornerRadius: 12, callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } }
         },
         scales: {
-          x: { grid: { display: false }, ticks: { color: isDark ? '#4a5568' : '#8b92a5', font: { size: 11, family: 'Inter' } } },
-          y: { grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)' }, ticks: { color: isDark ? '#4a5568' : '#8b92a5', font: { size: 11, family: 'Inter' }, callback: v => fmtShort(v) } }
+          x: { grid: { display: false }, ticks: { color: isDark ? '#94a3b8' : '#8b92a5', font: { size: 11, family: 'Inter' } } },
+          y: { grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }, ticks: { color: isDark ? '#94a3b8' : '#8b92a5', font: { size: 11, family: 'Inter' }, callback: v => fmtShort(v) } }
         }
       }
     });

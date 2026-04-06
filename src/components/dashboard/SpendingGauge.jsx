@@ -22,15 +22,15 @@ export default function SpendingGauge() {
   let color, statusText, statusBg;
   if (pct < 50) {
     color = isDark ? '#00ff94' : '#10b981';
-    statusText = '🟢 Healthy';
+    statusText = 'Healthy';
     statusBg = isDark ? 'rgba(0,255,148,0.12)' : 'rgba(16,185,129,0.12)';
   } else if (pct < 75) {
     color = isDark ? '#ffd60a' : '#f59e0b';
-    statusText = '🟡 Caution';
+    statusText = 'Caution';
     statusBg = isDark ? 'rgba(255,214,10,0.12)' : 'rgba(245,158,11,0.12)';
   } else {
     color = isDark ? '#ff4d6d' : '#ef4444';
-    statusText = '🔴 High Risk';
+    statusText = 'High Risk';
     statusBg = isDark ? 'rgba(255,77,109,0.12)' : 'rgba(239,68,68,0.12)';
   }
 
@@ -39,7 +39,7 @@ export default function SpendingGauge() {
       <div className="gauge-wrap">
         <svg className="gauge-svg" viewBox="0 0 160 100">
           <path
-            d={`M ${x1} ${y1} A ${R} ${R} 0 1 1 ${trackX2} ${trackY2}`}
+            d={`M ${trackX2} ${trackY2} A ${R} ${R} 0 0 0 ${x1} ${y1}`}
             fill="none" stroke="var(--border)" strokeWidth="14" strokeLinecap="round"
           />
           <path
@@ -58,7 +58,7 @@ export default function SpendingGauge() {
         </svg>
       </div>
       <div className="gauge-info">
-        <div className="gauge-title">⚡ Spending Health Gauge</div>
+        <div className="gauge-title">Spending Health Gauge</div>
         <div className="gauge-pct" style={{ color, textShadow: isDark ? `0 0 20px ${color}` : 'none' }}>
           {pct.toFixed(1)}%
         </div>

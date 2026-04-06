@@ -1,5 +1,6 @@
 import { useStore } from '../../store/useFinFlowStore';
-import { Home, CreditCard, BarChart2, Shield, Save, Target } from 'lucide-react';
+import { Home, CreditCard, BarChart2, Shield, Save, Target, Bot } from 'lucide-react';
+import Logo from '../ui/Logo';
 
 export default function Sidebar({ open, chatOpen, onToggleChat, onCloseSidebar }) {
   const { state, navigate, setRole } = useStore();
@@ -15,22 +16,7 @@ export default function Sidebar({ open, chatOpen, onToggleChat, onCloseSidebar }
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="logo-icon">
-          <svg width="28" height="28" viewBox="0 0 100 100" style={{ borderRadius: 8, boxShadow: '0 4px 10px rgba(168,85,247,0.4)' }}>
-            <defs>
-              <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#171f33" />
-                <stop offset="100%" stopColor="#0b1326" />
-              </linearGradient>
-              <linearGradient id="arrowGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#5d21df" />
-                <stop offset="50%" stopColor="#6833ea" />
-                <stop offset="100%" stopColor="#cdbdff" />
-              </linearGradient>
-            </defs>
-            <rect width="100" height="100" rx="22" fill="url(#bgGrad)" />
-            <path d="M 15 70 C 10 95 60 90 70 60 C 78 40 85 20 85 20" fill="none" stroke="url(#arrowGrad)" strokeWidth="12" strokeLinecap="round" />
-            <path d="M 88 15 L 65 25 L 80 40 Z" fill="#ffffff" />
-          </svg>
+          <Logo size={28} theme={state.theme} />
         </div>
         <div>
           <div className="logo-text">FinFlow</div>
@@ -78,7 +64,7 @@ export default function Sidebar({ open, chatOpen, onToggleChat, onCloseSidebar }
 
         <div className="nav-item" id="nav-finbot" onClick={onToggleChat}>
           <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="/ai-avatar.png" alt="AI Icon" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />
+            <Bot size={20} />
           </span>
           <span className="nav-label">FinBot AI</span>
           <span className="badge-new">RAG</span>

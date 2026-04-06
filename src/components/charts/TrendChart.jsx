@@ -36,16 +36,16 @@ export default function TrendChart() {
           {
             label: 'Income',
             data: incData,
-            backgroundColor: 'rgba(167, 139, 250, 0.85)',
+            backgroundColor: isDark ? 'rgba(0, 245, 255, 0.85)' : 'rgba(167, 139, 250, 0.85)',
             borderRadius: 6,
-            barThickness: 16
+            barThickness: 24
           },
           {
             label: 'Expenses',
             data: expData,
-            backgroundColor: 'rgba(251, 191, 36, 0.85)',
+            backgroundColor: isDark ? 'rgba(255, 0, 255, 0.85)' : 'rgba(251, 191, 36, 0.85)',
             borderRadius: 6,
-            barThickness: 16
+            barThickness: 24
           }
         ]
       },
@@ -53,11 +53,11 @@ export default function TrendChart() {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: { grid: { display: false }, ticks: { color: 'var(--text-muted)', font: { size: 10 } } },
+          x: { grid: { display: false }, ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 10 } } },
           y: { 
             beginAtZero: true, 
-            grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
-            ticks: { color: 'var(--text-muted)', font: { size: 10 }, callback: v => '₹' + v.toLocaleString('en-IN') }
+            grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', drawBorder: false },
+            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 10 }, callback: v => '₹' + v.toLocaleString('en-IN') }
           }
         },
         plugins: {

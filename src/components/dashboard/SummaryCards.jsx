@@ -33,36 +33,36 @@ export default function SummaryCards() {
 
   return (
     <div className="summary-grid">
-      <div className="summary-card card-balance">
+      <div className="summary-card card-balance premium-accent-blue">
         <div className="card-top">
           <div className="card-label">Net Balance</div>
-          <div className="card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Wallet size={20} /></div>
+          <div className="card-icon-box blue"><Wallet size={16} /></div>
         </div>
         <AnimatedCounter value={balance} id="val-balance" />
         <div className="card-sub" id="sub-balance">Savings: {fmt(balance)}</div>
-        <div className={`card-trend ${balance >= 0 ? 'trend-up' : 'trend-down'}`} id="trend-balance" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          {balance >= 0 ? <><ArrowUpRight size={14} /> Positive balance</> : <><ArrowDownRight size={14} /> Negative balance</>}
+        <div className={`card-trend ${balance >= 0 ? 'trend-up' : 'trend-down'}`} id="trend-balance">
+          {balance >= 0 ? <><ArrowUpRight size={12} /> Positive balance</> : <><ArrowDownRight size={12} /> Negative balance</>}
         </div>
       </div>
 
-      <div className="summary-card card-income">
+      <div className="summary-card card-income premium-accent-green">
         <div className="card-top">
           <div className="card-label">Total Income</div>
-          <div className="card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><TrendingUp size={20} /></div>
+          <div className="card-icon-box green"><TrendingUp size={16} /></div>
         </div>
         <AnimatedCounter value={income} id="val-income" />
         <div className="card-sub" id="sub-income">{incCount} income transactions</div>
-        <div className="card-trend trend-up" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowUpRight size={14} /> Earnings tracked</div>
+        <div className="card-trend trend-up"><ArrowUpRight size={12} /> Earnings tracked</div>
       </div>
 
-      <div className="summary-card card-expense">
+      <div className="summary-card card-expense premium-accent-red">
         <div className="card-top">
           <div className="card-label">Total Expenses</div>
-          <div className="card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><TrendingDown size={20} /></div>
+          <div className="card-icon-box red"><TrendingDown size={16} /></div>
         </div>
         <AnimatedCounter value={expenses} id="val-expenses" />
         <div className="card-sub" id="sub-expenses">{expCount} expense transactions</div>
-        <div className="card-trend trend-down" id="trend-expense" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ArrowDownRight size={14} /> Outflows tracked</div>
+        <div className="card-trend trend-down" id="trend-expense"><ArrowDownRight size={12} /> Outflows tracked</div>
       </div>
     </div>
   );

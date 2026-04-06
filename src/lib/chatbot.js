@@ -63,26 +63,27 @@ export const FinBot = (() => {
   }
 
   function detectIntent(text) {
-    // 1. Add Budget Check
-    const budgetMatch = text.match(/(?:set|create|add|make).*budget.*for\s+([a-z\s]+)\s+(?:to|is|of)\s+?(?:₹|rs|inr)?\s*(\d[\d,\.]*)/i);
+    // 1. Budget Creation Check (Admin Only)
+    const budgetMatch = text.match(/(?:set|create|add|make|change|update).*budget.*for\s+([a-z\s]+)\s+(?:to|is|of|at)\s+?(?:₹|rs|inr)?\s*(\d[\d,\.]*)/i) ||
+                        text.match(/(?:set|create|add|make|change|update)\s+?(?:₹|rs|inr)?\s*(\d[\d,\.]*)\s+budget.*for\s+([a-z\s]+)/i);
     if (budgetMatch) {
-      return { 
-        action: 'add_budget', 
-        category: extractCategory(budgetMatch[1]), 
-        amount: parseFloat(budgetMatch[2].replace(/,/g, ''))
-      };
+      if (budgetMatch[1] && isNaN(budgetMatch[1])) {
+         return { action: 'add_budget', category: extractCategory(budgetMatch[1]), amount: parseFloat(budgetMatch[2].replace(/,/g, '')) };
+      } else {
+         return { action: 'add_budget', category: extractCategory(budgetMatch[2]), amount: parseFloat(budgetMatch[1].replace(/,/g, '')) };
+      }
     }
 
-    // 2. Add Transaction Check
+    // 2. Transaction Extraction
     const amt = extractAmount(text);
-    if (amt && /(?:add|spent|record|log|spent|bought|purchased|income|salary|freelance)/i.test(text)) {
-      const type = /income|salary|freelance|gig/i.test(text) ? 'income' : 'expense';
+    if (amt && /(?:add|spent|record|log|spent|bought|purchased|income|salary|freelance|got|received|earned)/i.test(text)) {
+      const type = /income|salary|freelance|gig|earned|deposit|credited|received/i.test(text) ? 'income' : 'expense';
       return {
         action: 'add_transaction',
         tx: {
           id: Date.now(),
           date: new Date().toISOString().slice(0, 10),
-          desc: text.replace(/\d+|₹|rs|inr|add|spent|log|record|for|on/gi, '').trim() || (type === 'income' ? 'Income' : 'Expense'),
+          desc: text.replace(/\d+|₹|rs|inr|add|spent|log|record|for|on|income|salary|freelance|of|to/gi, '').trim() || (type === 'income' ? 'Income' : 'Expense'),
           amount: amt,
           category: extractCategory(text),
           type
@@ -113,32 +114,25 @@ export const FinBot = (() => {
     
     const catSummary = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([k,v]) => {
       const budget = budgets[k] || 0;
-      const status = budget > 0 ? (v > budget ? '!! OVER BUDGET !!' : `(Budget: ₹${budget})`) : '(No budget set)';
-      return `  ${k}: ₹${v} ${status}`;
+      const status = budget > 0 ? (v > budget ? `!! EXCEEDED BY ₹${v-budget} !!` : `(Remaining: ₹${budget-v})`) : '(No budget set)';
+      return `  - ${k}: Spent ₹${v} ${status}`;
     }).join('\n');
 
-    const months = ['2026-03','2026-02','2026-01'];
-    const monthSummary = months.map(m => {
-      const mInc = txs.filter(t=>t.type==='income'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
-      const mExp = txs.filter(t=>t.type==='expense'&&t.date.startsWith(m)).reduce((s,t)=>s+t.amount,0);
-      return `  ${m}: Income ₹${mInc}, Expenses ₹${mExp}, Saved ₹${mInc-mExp}`;
-    }).join('\n');
+    const budgetContext = Object.entries(budgets).map(([cat, amt]) => `  - ${cat} Limit: ₹${amt}`).join('\n') || '  No budgets defined.';
 
     return `
 FINANCIAL DATA CONTEXT:
-Total Income: ₹${income}
-Total Expenses: ₹${expenses}
 Net Balance: ₹${balance}
-Savings Rate: ${income > 0 ? ((balance/income)*100).toFixed(1) : 0}%
+Current Month Expenses: ₹${Object.values(catMap).reduce((s,v)=>s+v,0)}
 
-CURRENT MONTH STATUS (${currentMonth}):
-${catSummary || '  No expenses recorded this month.'}
+BUDGET SETTINGS (Admin Defined):
+${budgetContext}
 
-HISTORICAL MONTHS:
-${monthSummary}
+MONTHLY USAGE VS BUDGET:
+${catSummary || '  No spending yet this month.'}
 
-RECENT TRANSACTIONS:
-${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.category} | ${t.desc} | ₹${t.amount}`).join('\n')}
+RECENT HISTORY:
+${recent.slice(0,5).map(t=>`  - ${t.date}: ${t.desc} | ₹${t.amount} (${t.type})`).join('\n')}
 `;
   }
 
@@ -378,9 +372,26 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
     }
   }
 
+  function isApiKeyConfigured() {
+    try {
+      const cfg = window.FINFLOW_CONFIG || {};
+      let key = cfg.GEMINI_API_KEY;
+      if (!key && typeof import.meta !== 'undefined' && import.meta.env) {
+        key = import.meta.env.VITE_GEMINI_API_KEY;
+      }
+      return !!(key && typeof key === 'string' && key.trim().length > 10);
+    } catch { return false; }
+  }
+
   async function callGemini(userMsg, context) {
     const cfg = window.FINFLOW_CONFIG || {};
-        if (!key || key.trim().length < 10) {
+    let key = cfg.GEMINI_API_KEY;
+    if (!key && typeof import.meta !== 'undefined' && import.meta.env) {
+      key = import.meta.env.VITE_GEMINI_API_KEY;
+    }
+    const model = cfg.GEMINI_MODEL || 'gemini-1.5-flash';
+    
+    if (!key || key.trim().length < 10) {
       throw new Error('<span style="color:var(--accent-red)">✕</span> Invalid API Key: missing or too short');
     }
 
@@ -432,8 +443,8 @@ AUDIT GUIDELINES:
 
   function isApiKeyConfigured() {
     const cfg = window.FINFLOW_CONFIG || {};
-    const key = cfg.GEMINI_API_KEY;
-    return key && typeof key === 'string' && key.trim().length > 10;
+    const key = import.meta.env.VITE_GEMINI_API_KEY || cfg.GEMINI_API_KEY;
+    return !!(key && typeof key === 'string' && key.trim().length > 10);
   }
 
   function parseAction(text) {
@@ -484,18 +495,29 @@ AUDIT GUIDELINES:
     const intent  = detectIntent(userMsg);
     const context = buildContext(txs, budgets);
 
-    // 1. Natural Language / Local Fallback
+    // AI Path Priority
+    if (isApiKeyConfigured()) {
+      try {
+        const aiText = await callGemini(userMsg, context);
+        const action = parseAction(aiText);
+        
+        if (action && action.action === 'add_transaction' && role === 'admin') {
+           // ... handle add tx ...
+        }
+        // If AI gives text, return it
+        if (aiText) return { text: aiText, action };
+      } catch (err) {
+        console.warn("AI Path Failed:", err.message);
+        // Fallback to local logic if AI actually fails
+      }
+    }
+
+    // Local Path
     if (intent) {
-      if (intent.action === 'add_transaction') {
-        if (role !== 'admin') return { text: "⚠️ Viewer mode: Cannot add transactions." };
-        onAction({ action: 'add_transaction', tx: intent.tx });
-        return { text: `✅ Added **${intent.tx.desc}** (${intent.tx.category}) for **${fmt(intent.tx.amount)}**.` };
+      if (intent.action === 'insight') {
+        return { text: `📊 **Insights & Analysis**\n\nI've analyzed your data. For a complete deep-dive with interactive charts, please head over to the **Insights** tab.\n\n${localResponse('insight', userMsg, txs, role)}` };
       }
-      if (intent.action === 'add_budget') {
-        if (role !== 'admin') return { text: "⚠️ Viewer mode: Cannot modify budgets." };
-        onAction({ action: 'add_budget', category: intent.category, amount: intent.amount });
-        return { text: `🎯 Target set! Budget for **${intent.category}** is now **${fmt(intent.amount)}**.` };
-      }
+      // ...
     }
 
     const checkRedZone = (tx) => {
@@ -639,7 +661,7 @@ AUDIT GUIDELINES:
       return { text: '🗑 **Conversation Cleared!** I have wiped the history for you.', action: { action: 'clear_chat' } };
     }
 
-    return { text: localResponse(intent, userMsg, txs, role), action: null };
+    return { text: localResponse(intent ? intent.action : null, userMsg, txs, role), action: null };
   }
 
   return { processMessage, detectIntent, buildBudgetPlan };

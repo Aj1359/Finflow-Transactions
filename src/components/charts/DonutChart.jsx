@@ -32,8 +32,8 @@ export default function DonutChart() {
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '68%',
         plugins: {
-          legend: { position: 'right', labels: { color: isDark ? '#8892b0' : '#5a6478', font: { size: 11, family: 'Inter' }, padding: 12, boxWidth: 12, boxHeight: 12, usePointStyle: true, pointStyleWidth: 12 } },
-          tooltip: { backgroundColor: isDark ? '#111827' : '#ffffff', titleColor: isDark ? '#e8eaf6' : '#0d1117', bodyColor: isDark ? '#8892b0' : '#5a6478', borderColor: isDark ? '#1e2d4a' : '#e2e6f0', borderWidth: 1, padding: 12, cornerRadius: 12, callbacks: { label: ctx => ` ${ctx.label}: ${fmt(ctx.parsed)}` } }
+          legend: { position: 'right', labels: { color: isDark ? '#94a3b8' : '#5a6478', font: { size: 11, family: 'Inter' }, padding: 12, boxWidth: 12, boxHeight: 12, usePointStyle: true, pointStyleWidth: 12 } },
+          tooltip: { backgroundColor: isDark ? '#111827' : '#ffffff', titleColor: isDark ? '#e8eaf6' : '#0d1117', bodyColor: isDark ? '#94a3b8' : '#5a6478', borderColor: isDark ? '#1e2d4a' : '#e2e6f0', borderWidth: 1, padding: 12, cornerRadius: 12, callbacks: { label: ctx => ` ${ctx.label}: ${fmt(ctx.parsed)}` } }
         }
       }
     });
@@ -43,7 +43,7 @@ export default function DonutChart() {
   return (
     <div className="chart-card">
       <div className="chart-card-header">
-        <h3>Spending Category Breakdown</h3>
+        <h3>Spending by Category</h3>
         <span>All time</span>
       </div>
       <div className="chart-wrap">

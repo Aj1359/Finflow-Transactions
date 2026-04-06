@@ -143,19 +143,21 @@
 
 .executive-title {
   font-size: 6rem;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -2px;
-  background: linear-gradient(135deg, #f8fafc, #a78bfa);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 10px 30px rgba(167, 139, 250, 0.3));
+  color: #6d28d9;
+  margin-bottom: 5px;
+  text-shadow: 0 10px 30px rgba(109, 40, 217, 0.1);
+}
+
+.landing-container[data-theme="light"] .executive-title {
+  color: #5b21b6;
 }
 
 .executive-tagline {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: 6px;
+  letter-spacing: 7px;
   color: #94a3b8;
   text-transform: uppercase;
 }

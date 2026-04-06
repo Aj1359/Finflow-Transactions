@@ -17,8 +17,8 @@ export default function DashboardPage() {
     <section className={`section${isActive ? ' active' : ''}`} id="section-dashboard">
       <div className="section-header">
         <div>
-          <h2>Business Intelligence</h2>
-          <p>Real-time analytics and financial performance metrics</p>
+          <h2>Overview</h2>
+          <p>All-time financial summary across all transactions</p>
         </div>
       </div>
 
