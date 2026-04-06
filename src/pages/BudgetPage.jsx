@@ -1,6 +1,7 @@
 import { useStore } from '../store/useFinFlowStore';
 import { fmt } from '../lib/utils';
 import { CATEGORIES } from '../lib/constants';
+import { BarChart2, AlertTriangle, CheckCircle } from 'lucide-react';
 
 export default function BudgetPage() {
   const { state, setBudget } = useStore();
@@ -45,8 +46,8 @@ export default function BudgetPage() {
             <div key={cat} className="budget-card">
               <div className="budget-card-header">
                 <h3>{cat}</h3>
-                <span className={`status-badge ${isOver ? 'badge-danger' : 'badge-success'}`} style={{ fontSize: '0.7rem' }}>
-                  {isOver ? '⚠️ Over Budget' : (limit > 0 ? '✅ On Track' : 'Not Set')}
+                <span className={`status-badge ${isOver ? 'badge-danger' : 'badge-success'}`} style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  {isOver ? <><AlertTriangle size={12} /> Over Budget</> : (limit > 0 ? <><CheckCircle size={12} /> On Track</> : 'Not Set')}
                 </span>
               </div>
 
@@ -86,7 +87,7 @@ export default function BudgetPage() {
       
       {expenseCategories.length === 0 && (
         <div className="empty-state">
-          <div className="empty-icon">📊</div>
+          <div className="empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><BarChart2 size={32} /></div>
           <h3>No categories defined</h3>
         </div>
       )}

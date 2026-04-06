@@ -1,11 +1,17 @@
 import { useStore } from '../../store/useFinFlowStore';
+import { Home, CreditCard, BarChart2, Shield, Save, Target } from 'lucide-react';
 
-export default function Sidebar({ chatOpen, onToggleChat }) {
+export default function Sidebar({ chatOpen, onToggleChat, onCloseSidebar }) {
   const { state, navigate, setRole } = useStore();
   const { activeSection, role } = state;
 
+  const handleNav = (sec) => {
+    navigate(sec);
+    if (onCloseSidebar) onCloseSidebar();
+  };
+
   return (
-    <aside className={`sidebar`} id="sidebar">
+    <aside className="sidebar" id="sidebar">
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="logo-icon">
@@ -36,29 +42,34 @@ export default function Sidebar({ chatOpen, onToggleChat }) {
       <nav className="sidebar-nav">
         <div className="nav-section-label">Main</div>
 
-        {['dashboard', 'transactions', 'insights'].map(sec => (
+        {[
+          { sec: 'dashboard',    icon: <Home size={18} />, label: 'Dashboard' },
+          { sec: 'transactions', icon: <CreditCard size={18} />, label: 'Transactions' },
+          { sec: 'insights',     icon: <BarChart2 size={18} />, label: 'Insights' },
+          { sec: 'budget',       icon: <Target size={18} />, label: 'Budget' },
+        ].map(({ sec, icon, label }) => (
           <div
             key={sec}
             className={`nav-item${activeSection === sec ? ' active' : ''}`}
-            onClick={() => navigate(sec)}
+            onClick={() => handleNav(sec)}
           >
-            <span className="nav-icon">
-              {sec === 'dashboard' ? '🏠' : sec === 'transactions' ? '💳' : '📊'}
+            <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {icon}
             </span>
-            <span className="nav-label" style={{ textTransform: 'capitalize' }}>{sec}</span>
+            <span className="nav-label">{label}</span>
           </div>
         ))}
 
         <div className="nav-section-label" style={{ marginTop: 8 }}>Quick Info</div>
 
         <div className="nav-item" style={{ cursor: 'default', opacity: 0.7 }}>
-          <span className="nav-icon">🛡</span>
+          <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Shield size={18} /></span>
           <span className="nav-label">Balance Guard</span>
           <span className="nav-badge">ON</span>
         </div>
 
         <div className="nav-item" style={{ cursor: 'default', opacity: 0.7 }}>
-          <span className="nav-icon">💾</span>
+          <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Save size={18} /></span>
           <span className="nav-label">Auto-Save</span>
           <span className="nav-badge">LS</span>
         </div>
@@ -66,7 +77,9 @@ export default function Sidebar({ chatOpen, onToggleChat }) {
         <div className="nav-section-label" style={{ marginTop: 8 }}>AI Assistant</div>
 
         <div className="nav-item" id="nav-finbot" onClick={onToggleChat}>
-          <span className="nav-icon">🤖</span>
+          <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src="/ai-avatar.png" alt="AI Icon" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />
+          </span>
           <span className="nav-label">FinBot AI</span>
           <span className="badge-new">RAG</span>
         </div>
@@ -78,8 +91,9 @@ export default function Sidebar({ chatOpen, onToggleChat }) {
           <div
             className="role-dot"
             style={{
-              background: role === 'admin' ? 'var(--accent-green)' : 'var(--accent-yellow)',
-              boxShadow: role === 'admin' ? '0 0 6px var(--accent-green)' : '0 0 6px var(--accent-yellow)',
+               background: role === 'admin' ? 'var(--accent-green)' : 'var(--accent-yellow)',
+               boxShadow: role === 'admin' ? '0 0 6px var(--accent-green)' : '0 0 6px var(--accent-yellow)',
+               width: 10, height: 10, borderRadius: '50%'
             }}
           />
           <div>

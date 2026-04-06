@@ -1,6 +1,7 @@
 import { useStore } from '../../store/useFinFlowStore';
 import { fmt } from '../../lib/utils';
 import { useAppToast } from '../../App';
+import { Search, TrendingDown, TrendingUp, Calendar, Trash2 } from 'lucide-react';
 
 export default function TransactionTable() {
   const { state, deleteTx, setSort } = useStore();
@@ -57,7 +58,7 @@ export default function TransactionTable() {
                 <tr>
                   <td colSpan="6">
                     <div className="empty-state">
-                      <div className="empty-icon">🔍</div>
+                      <div className="empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Search size={32} /></div>
                       <h3>No Transactions Found</h3>
                       <p>Try adjusting your filters or search query.</p>
                     </div>
@@ -70,11 +71,11 @@ export default function TransactionTable() {
                     <td>{dateStr}</td>
                     <td>{t.desc}</td>
                     <td><span className="cat-pill">{t.category}</span></td>
-                    <td><span className={`tx-type-badge type-${t.type}`}>{t.type === 'income' ? '⬆' : '⬇'} {t.type}</span></td>
+                    <td><span className={`tx-type-badge type-${t.type}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{t.type === 'income' ? <TrendingUp size={14} /> : <TrendingDown size={14} />} {t.type}</span></td>
                     <td className={t.type === 'income' ? 'tx-amount-income' : 'tx-amount-expense'}>{t.type === 'income' ? '+' : '-'}{fmt(t.amount)}</td>
                     <td>
                       {role === 'admin'
-                        ? <button className="btn btn-danger" onClick={() => handleDelete(t.id)}>🗑 Delete</button>
+                        ? <button className="btn btn-danger" onClick={() => handleDelete(t.id)} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Trash2 size={14} /> Delete</button>
                         : <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>—</span>
                       }
                     </td>
@@ -90,7 +91,7 @@ export default function TransactionTable() {
       <div className="tx-card-list">
         {txs.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🔍</div>
+            <div className="empty-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Search size={32} /></div>
             <h3>No Transactions Found</h3>
           </div>
         ) : txs.map(t => {
@@ -107,10 +108,10 @@ export default function TransactionTable() {
                 </div>
               </div>
               <div className="tx-card-footer">
-                <div className="tx-card-date">📅 {dateStr}</div>
+                <div className="tx-card-date" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={14} /> {dateStr}</div>
                 {role === 'admin' && (
-                  <button className="btn btn-danger" style={{ padding: '4px 8px', fontSize: '0.7rem' }} onClick={() => handleDelete(t.id)}>
-                    🗑 Delete
+                  <button className="btn btn-danger" style={{ padding: '4px 8px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }} onClick={() => handleDelete(t.id)}>
+                    <Trash2 size={12} /> Delete
                   </button>
                 )}
               </div>

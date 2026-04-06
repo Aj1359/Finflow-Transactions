@@ -5,6 +5,7 @@ import InsightCards from '../components/insights/InsightCards';
 import AlertsList from '../components/insights/AlertsList';
 import MonthlyChart from '../components/charts/MonthlyChart';
 import CategoryBars from '../components/dashboard/CategoryBars';
+import { List } from 'lucide-react';
 
 export default function InsightsPage() {
   const { state } = useStore();
@@ -25,7 +26,7 @@ export default function InsightsPage() {
         <MonthlyChart />
         <div className="chart-card">
           <div className="chart-card-header">
-            <h3>📋 Category Breakdown</h3>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><List size={18} /> Category Breakdown</h3>
             <span>All expenses</span>
           </div>
           <CategoryBars maxItems={6} containerId="cat-bars" />

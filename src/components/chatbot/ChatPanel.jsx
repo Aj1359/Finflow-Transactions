@@ -3,6 +3,7 @@ import { FinBot } from '../../lib/chatbot';
 import { useStore } from '../../store/useFinFlowStore';
 import { useAppToast } from '../../App';
 import FINFLOW_CONFIG from '../../config/finflow.config';
+import { Settings, Trash2, X, Send, Bot, User, Zap, MessageSquareWarning, Wallet, BarChart2, Award, Calendar, Search } from 'lucide-react';
 
 function markdownToHtml(text) {
   return text
@@ -79,7 +80,7 @@ export default function ChatPanel({ open, onClose }) {
       const { text: reply, action } = await FinBot.processMessage(text, state.transactions, act => {
         if (act.action === 'add_transaction' && act.tx) {
           addTx(act.tx);
-          toast('FinBot added a transaction! 🤖', 'success');
+          toast('FinBot added a transaction!', 'success');
         }
         if (act.action === 'delete_transaction' && act.tx) {
           deleteTx(act.tx.id);
@@ -109,7 +110,7 @@ export default function ChatPanel({ open, onClose }) {
     appendBot('', true);
     try {
       const { text: reply } = await FinBot.processMessage(msg, state.transactions, act => {
-        if (act.action === 'add_transaction' && act.tx) { addTx(act.tx); toast('FinBot added a transaction! 🤖', 'success'); }
+        if (act.action === 'add_transaction' && act.tx) { addTx(act.tx); toast('FinBot added a transaction!', 'success'); }
       }, state.role);
       removeTyping();
       appendBot(reply);
@@ -148,7 +149,9 @@ export default function ChatPanel({ open, onClose }) {
     <div className={`chat-panel${open ? ' open' : ''}`} id="chat-panel">
       {/* Header */}
       <div className="chat-header">
-        <div className="chat-avatar">🤖</div>
+        <div className="chat-avatar" style={{ padding: 0, overflow: 'hidden' }}>
+          <img src="/ai-avatar.png" alt="FinBot AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
         <div className="chat-header-info">
           <div className="chat-header-name">FinBot AI</div>
           <div className="chat-header-status">
@@ -156,17 +159,21 @@ export default function ChatPanel({ open, onClose }) {
             <span id="chat-mode-label">{aiMode === 'gemini' ? 'Gemini AI Mode' : 'Local RAG Mode'}</span>
           </div>
         </div>
-        <div className="chat-header-actions">
-          <button className="chat-head-btn" title="API Settings" onClick={() => setSettingsOpen(v => !v)}>⚙️</button>
+        <div className="chat-header-actions" style={{ display: 'flex', gap: '4px' }}>
+          <button className="chat-head-btn" title="API Settings" onClick={() => setSettingsOpen(v => !v)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Settings size={18} />
+          </button>
           <button 
             className={`chat-head-btn ${clearConfirm ? 'confirming' : ''}`} 
             title={clearConfirm ? "Click again to confirm" : "Clear chat"} 
             onClick={handleClearRequest}
-            style={clearConfirm ? { background: 'var(--accent-red)', color: '#fff' } : {}}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', ...(clearConfirm ? { background: 'var(--accent-red)', color: '#fff' } : {}) }}
           >
-            {clearConfirm ? '🗑 ?' : '🗑'}
+            {clearConfirm ? <MessageSquareWarning size={18} /> : <Trash2 size={18} />}
           </button>
-          <button className="chat-head-btn" onClick={onClose} title="Close">✕</button>
+          <button className="chat-head-btn" onClick={onClose} title="Close" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={18} />
+          </button>
         </div>
       </div>
 
@@ -175,8 +182,8 @@ export default function ChatPanel({ open, onClose }) {
         <label>Gemini API Key <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional — for AI-powered answers)</span></label>
         <input type="password" id="gemini-key-input" placeholder="AIza…" value={apiKey} onChange={e => setApiKey(e.target.value)} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className={`ai-mode-badge ${aiMode === 'gemini' ? 'ai-mode-gemini' : 'ai-mode-local'}`} id="ai-badge">
-            {aiMode === 'gemini' ? '🤖 Gemini AI' : '⚡ Local RAG'}
+          <span className={`ai-mode-badge ${aiMode === 'gemini' ? 'ai-mode-gemini' : 'ai-mode-local'}`} id="ai-badge" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {aiMode === 'gemini' ? <><Bot size={14} /> Gemini AI</> : <><Zap size={14} /> Local RAG</>}
           </span>
           <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.78rem' }} onClick={saveApiKey}>Save Key</button>
         </div>
@@ -189,7 +196,12 @@ export default function ChatPanel({ open, onClose }) {
       <div className="chat-messages" id="chat-messages" ref={msgsRef}>
         {messages.map(m => (
           <div key={m.id} className={`chat-msg ${m.role}`}>
-            <div className="msg-avatar">{m.role === 'bot' ? '🤖' : '👤'}</div>
+            <div className="msg-avatar" style={{ padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              {m.role === 'bot' 
+                ? <img src="/ai-avatar.png" alt="Bot" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> 
+                : <User size={16} />
+              }
+            </div>
             <div className="msg-bubble">
               {m.isTyping
                 ? <div className="typing-dots"><span/><span/><span/></div>
@@ -203,13 +215,15 @@ export default function ChatPanel({ open, onClose }) {
       {/* Quick prompts */}
       <div className="chat-quick-prompts" id="chat-quick-prompts">
         {[
-          ['💰 Balance', "What is my balance?"],
-          ['📊 Budget',  "Show budget plan"],
-          ['🏆 Top Spend',"Top spending categories"],
-          ['📅 Monthly', "Monthly insights"],
-          ['🔍 Insights', "Financial insights"],
-        ].map(([label, msg]) => (
-          <button key={label} className="quick-prompt" onClick={() => handleQuick(msg)}>{label}</button>
+          ['Balance', "What is my balance?", <Wallet size={16} />],
+          ['Budget',  "Show budget plan", <BarChart2 size={16} />],
+          ['Top Spend',"Top spending categories", <Award size={16} />],
+          ['Monthly', "Monthly insights", <Calendar size={16} />],
+          ['Insights', "Financial insights", <Search size={16} />],
+        ].map(([label, msg, icon]) => (
+          <button key={label} className="quick-prompt" onClick={() => handleQuick(msg)} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>{icon}</span> {label}
+          </button>
         ))}
       </div>
 
@@ -220,13 +234,13 @@ export default function ChatPanel({ open, onClose }) {
           id="chat-input"
           type="text"
           ref={inputRef}
-          placeholder='Ask FinBot… e.g. "Add expense ₹500 food"'
+          placeholder='Ask FinBot… e.g. "Add expense ₹500"'
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
         />
-        <button className="chat-send" id="chat-send-btn" onClick={handleSend} aria-label="Send" disabled={sending}>
-          ➤
+        <button className="chat-send" id="chat-send-btn" onClick={handleSend} aria-label="Send" disabled={sending} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Send size={18} />
         </button>
       </div>
     </div>

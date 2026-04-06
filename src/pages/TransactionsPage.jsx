@@ -7,6 +7,7 @@ import { download } from '../lib/utils';
 import TransactionTable from '../components/transactions/TransactionTable';
 import AddTransactionModal from '../components/transactions/AddTransactionModal';
 import { useAppToast } from '../App';
+import { Download, FileText, FileJson, Search } from 'lucide-react';
 
 export default function TransactionsPage() {
   const { state, setFilter } = useStore();
@@ -22,13 +23,13 @@ export default function TransactionsPage() {
     const rows = transactions.map(t => [t.date, `"${t.desc}"`, t.category, t.type, t.amount]);
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
     download('finflow_transactions.csv', csv, 'text/csv');
-    toast('Exported as CSV! 📄', 'success');
+    toast('Exported as CSV!', 'success');
     setExportOpen(false);
   };
 
   const exportJSON = () => {
     download('finflow_transactions.json', JSON.stringify(state.transactions, null, 2), 'application/json');
-    toast('Exported as JSON! 📦', 'success');
+    toast('Exported as JSON!', 'success');
     setExportOpen(false);
   };
 
@@ -43,12 +44,12 @@ export default function TransactionsPage() {
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             {isAdmin && (
               <div className="export-menu-wrap admin-only">
-                <button className="btn btn-outline" id="btn-export" onClick={e => { e.stopPropagation(); setExportOpen(v => !v); }}>
-                  📤 Export ▾
+                <button className="btn btn-outline" id="btn-export" onClick={e => { e.stopPropagation(); setExportOpen(v => !v); }} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Download size={14} /> Export ▾
                 </button>
                 <div className={`export-menu${exportOpen ? ' open' : ''}`} id="export-menu">
-                  <div className="export-option" id="export-csv" onClick={exportCSV}>📄 Export CSV</div>
-                  <div className="export-option" id="export-json" onClick={exportJSON}>📦 Export JSON</div>
+                  <div className="export-option" id="export-csv" onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FileText size={14} /> Export CSV</div>
+                  <div className="export-option" id="export-json" onClick={exportJSON} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><FileJson size={14} /> Export JSON</div>
                 </div>
               </div>
             )}
@@ -63,7 +64,7 @@ export default function TransactionsPage() {
         {/* Filter Controls */}
         <div className="tx-controls">
           <div className="search-box">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"><Search size={14} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} /></span>
             <input
               type="text"
               id="tx-search"

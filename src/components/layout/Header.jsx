@@ -1,9 +1,11 @@
 import { useStore } from '../../store/useFinFlowStore';
+import { Sun, Moon } from 'lucide-react';
 
 const SECTION_META = {
-  dashboard:    ['Dashboard',    'Your financial overview at a glance'],
-  transactions: ['Transactions', 'Manage and explore your financial records'],
-  insights:     ['Insights',     'Understanding your spending patterns'],
+  dashboard:    ['Business Analytics', 'Comprehensive financial performance overview'],
+  transactions: ['Ledger Manager',    'In-depth review of financial records'],
+  insights:     ['Market Intelligence', 'Strategic spending patterns and trends'],
+  budget:       ['Capital Allocation', 'Optimization and limit management'],
 };
 
 export default function Header({ onOpenSidebar }) {
@@ -44,8 +46,8 @@ export default function Header({ onOpenSidebar }) {
           <option value="viewer">Viewer</option>
         </select>
 
-        <button className="theme-toggle-compact" id="theme-btn" title="Toggle theme" aria-label="Toggle theme" onClick={toggleTheme}>
-          {theme === 'dark' ? '☀️' : '🌙'}
+        <button className="theme-toggle-compact" id="theme-btn" title="Toggle theme" aria-label="Toggle theme" onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
       </div>
     </header>

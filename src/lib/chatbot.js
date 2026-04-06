@@ -129,18 +129,18 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
     const budget20 = avgInc * 0.20;
     const fmtN = n => `₹${Math.round(n).toLocaleString('en-IN')}`;
     const lines = [];
-    lines.push(`📊 **Budget Plan** (based on ${basisText}: ${fmtN(avgInc)})`);
+    lines.push(` **Budget Plan** (based on ${basisText}: ${fmtN(avgInc)})`);
     lines.push('');
     lines.push('**50/30/20 Rule Recommendation:**');
-    lines.push(`• **Needs** (50%): ${fmtN(budget50)} → You spent ${fmtN(needs)} ${needs>budget50?'⚠️ Over!':'✅ Good'}`);
-    lines.push(`• **Wants** (30%): ${fmtN(budget30)} → You spent ${fmtN(wants)} ${wants>budget30?'⚠️ Over!':'✅ Good'}`);
-    lines.push(`• **Savings** (20%): ${fmtN(budget20)} → Actual ${fmtN(actual_savings)} ${actual_savings<budget20?'⚠️ Low!':'✅ Great'}`);
+    lines.push(` **Needs** (50%): ${fmtN(budget50)} → You spent ${fmtN(needs)} ${needs>budget50?'<span style="color:var(--accent-yellow)">!</span> Over!':'<span style="color:var(--accent-green)">✓</span> Good'}`);
+    lines.push(` **Wants** (30%): ${fmtN(budget30)} → You spent ${fmtN(wants)} ${wants>budget30?'<span style="color:var(--accent-yellow)">!</span> Over!':'<span style="color:var(--accent-green)">✓</span> Good'}`);
+    lines.push(` **Savings** (20%): ${fmtN(budget20)} → Actual ${fmtN(actual_savings)} ${actual_savings<budget20?'<span style="color:var(--accent-yellow)">!</span> Low!':'<span style="color:var(--accent-green)">✓</span> Great'}`);
     lines.push('');
     const tips = [];
-    if ((catMap.Food||0) > 3000) tips.push('🍽  Food spending is high — try meal prepping');
-    if ((catMap.Entertainment||0) > 1000) tips.push('🎬 Entertainment is a big chunk — review subscriptions');
-    if ((catMap.Shopping||0) > 1500) tips.push('🛍 Shopping trend up — try 24-hour rule before purchases');
-    if (actual_savings < budget20 && avgInc>0) tips.push(`💰 Boost savings by cutting ${fmtN(budget20-actual_savings)} from wants`);
+    if ((catMap.Food||0) > 3000) tips.push('  Food spending is high — try meal prepping');
+    if ((catMap.Entertainment||0) > 1000) tips.push(' Entertainment is a big chunk — review subscriptions');
+    if ((catMap.Shopping||0) > 1500) tips.push(' Shopping trend up — try 24-hour rule before purchases');
+    if (actual_savings < budget20 && avgInc>0) tips.push(` Boost savings by cutting ${fmtN(budget20-actual_savings)} from wants`);
     if (tips.length) { lines.push('**Personalized Tips:**'); tips.forEach(t => lines.push(t)); }
     return lines.join('\n');
   }
@@ -154,7 +154,7 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
     const catMap = {};
     txs.filter(t=>t.type==='expense').forEach(t=>{ catMap[t.category]=(catMap[t.category]||0)+t.amount; });
     const topCat = Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0];
-    function healthEmoji(p) { return p < 50 ? '🟢' : p < 75 ? '🟡' : '🔴'; }
+    function healthEmoji(p) { return p < 50 ? '<span style="color:var(--accent-green); font-size:1.2em;"></span>' : p < 75 ? '<span style="color:var(--accent-yellow); font-size:1.2em;"></span>' : '<span style="color:var(--accent-red); font-size:1.2em;"></span>'; }
 
     // Check for affordability queries
     if (/can.*(afford|buy|purchase|get)/i.test(userMsg)) {
@@ -163,20 +163,20 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
         const canAfford = amt <= balance;
         const remaining = balance - amt;
         return canAfford 
-          ? `✅ **Yes, you can!**\nYou have ${fmtN(balance)} available. After spending ${fmtN(amt)}, you'll still have **${fmtN(remaining)}** left. ${remaining < (income * 0.1) ? '\n⚠️ *Note: This will leave your savings quite low.*' : ''}`
-          : `❌ **No, it's out of reach.**\nThis costs ${fmtN(amt)}, but your current balance is **${fmtN(balance)}**. You are short by ${fmtN(amt - balance)}.`;
+          ? `<span style="color:var(--accent-green)">✓</span> **Yes, you can!**\nYou have ${fmtN(balance)} available. After spending ${fmtN(amt)}, you'll still have **${fmtN(remaining)}** left. ${remaining < (income * 0.1) ? '\n<span style="color:var(--accent-yellow)">!</span> *Note: This will leave your savings quite low.*' : ''}`
+          : `<span style="color:var(--accent-red)">✕</span> **No, it's out of reach.**\nThis costs ${fmtN(amt)}, but your current balance is **${fmtN(balance)}**. You are short by ${fmtN(amt - balance)}.`;
       }
     }
 
     switch(intent) {
       case 'balance':
-        return '💰 **Your Financial Snapshot**\n• Net Balance: **' + fmtN(balance) + '**\n• Total Income: ' + fmtN(income) + '\n• Total Expenses: ' + fmtN(expenses) + '\n• Spending rate: ' + pct + '% of income ' + healthEmoji(+pct);
+        return ' **Your Financial Snapshot**\n Net Balance: **' + fmtN(balance) + '**\n Total Income: ' + fmtN(income) + '\n Total Expenses: ' + fmtN(expenses) + '\n Spending rate: ' + pct + '% of income ' + healthEmoji(+pct);
 
       case 'top_spend': {
-        if (!topCat) return '📊 No expense data yet. Add some transactions first!';
+        if (!topCat) return ' No expense data yet. Add some transactions first!';
         const topList = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,5)
           .map(([k,v],i)=>`${i+1}. **${k}**: ${fmtN(v)}`).join('\n');
-        return '📊 **Top Spending Categories:**\n' + topList + '\n\n💡 Your biggest expense is **' + topCat[0] + '** at ' + fmtN(topCat[1]);
+        return ' **Top Spending Categories:**\n' + topList + '\n\n Your biggest expense is **' + topCat[0] + '** at ' + fmtN(topCat[1]);
       }
 
       case 'top_tx': {
@@ -186,13 +186,13 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
         if (/income/i.test(userMsg)) filtered = txs.filter(t => t.type === 'income');
         else if (/expense/i.test(userMsg)) filtered = txs.filter(t => t.type === 'expense');
         const topTxs = [...filtered].sort((a, b) => getValueScore(b) - getValueScore(a)).slice(0, num);
-        if (topTxs.length === 0) return `📋 No transactions found. Try adding some first!`;
+        if (topTxs.length === 0) return ` No transactions found. Try adding some first!`;
         const list = topTxs.map((t, i) => {
           const score = getValueScore(t);
-          const scoreEmoji = score > 70 ? '⭐⭐⭐' : score > 50 ? '⭐⭐' : '⭐';
-          return `${i+1}. **${t.date}** | ${t.type === 'income' ? '📈' : '📉'} ${t.category} | **${fmtN(t.amount)}** | ${t.desc} ${scoreEmoji}`;
+          const scoreEmoji = score > 70 ? '<span style="color:var(--accent-yellow)">★</span><span style="color:var(--accent-yellow)">★</span><span style="color:var(--accent-yellow)">★</span>' : score > 50 ? '<span style="color:var(--accent-yellow)">★</span><span style="color:var(--accent-yellow)">★</span>' : '<span style="color:var(--accent-yellow)">★</span>';
+          return `${i+1}. **${t.date}** | ${t.type === 'income' ? '' : ''} ${t.category} | **${fmtN(t.amount)}** | ${t.desc} ${scoreEmoji}`;
         }).join('\n');
-        return `⭐ **Best ${num} Value Transactions:**\n${list}`;
+        return `<span style="color:var(--accent-yellow)">★</span> **Best ${num} Value Transactions:**\n${list}`;
       }
 
       case 'worst_tx': {
@@ -202,28 +202,28 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
         if (/income/i.test(userMsg)) filtered = txs.filter(t => t.type === 'income');
         else if (/expense/i.test(userMsg)) filtered = txs.filter(t => t.type === 'expense');
         const worstTxs = [...filtered].sort((a, b) => getValueScore(a) - getValueScore(b)).slice(0, num);
-        if (worstTxs.length === 0) return `📋 No transactions found. Try adding some first!`;
+        if (worstTxs.length === 0) return ` No transactions found. Try adding some first!`;
         const list = worstTxs.map((t, i) => {
           const score = getValueScore(t);
-          const scoreEmoji = score < 30 ? '❌❌❌' : score < 50 ? '❌❌' : '❌';
-          return `${i+1}. **${t.date}** | ${t.type === 'income' ? '📈' : '📉'} ${t.category} | **${fmtN(t.amount)}** | ${t.desc} ${scoreEmoji}`;
+          const scoreEmoji = score < 30 ? '<span style="color:var(--accent-red)">✕</span><span style="color:var(--accent-red)">✕</span><span style="color:var(--accent-red)">✕</span>' : score < 50 ? '<span style="color:var(--accent-red)">✕</span><span style="color:var(--accent-red)">✕</span>' : '<span style="color:var(--accent-red)">✕</span>';
+          return `${i+1}. **${t.date}** | ${t.type === 'income' ? '' : ''} ${t.category} | **${fmtN(t.amount)}** | ${t.desc} ${scoreEmoji}`;
         }).join('\n');
-        return `📉 **Worst ${num} Value Transactions:**\n${list}\n\n💡 **Tip:** Consider alternatives for these categories.`;
+        return ` **Worst ${num} Value Transactions:**\n${list}\n\n **Tip:** Consider alternatives for these categories.`;
       }
 
       case 'search': {
         const searchTerm = userMsg.replace(/(?:search|find|look for|show|filter|where)/gi, '').trim();
-        if (!searchTerm) return `🔍 What would you like to search for?`;
+        if (!searchTerm) return ` What would you like to search for?`;
         const results = txs.filter(t =>
           new RegExp(searchTerm, 'i').test(t.desc) ||
           new RegExp(searchTerm, 'i').test(t.category) ||
           t.amount.toString() === searchTerm
         ).slice(0, 10);
-        if (results.length === 0) return `❌ No transactions found matching "${searchTerm}"`;
+        if (results.length === 0) return `<span style="color:var(--accent-red)">✕</span> No transactions found matching "${searchTerm}"`;
         const list = results.map((t, i) =>
-          `${i+1}. **${t.date}** | ${t.type === 'income' ? '📈' : '📉'} ${t.category} | **${fmtN(t.amount)}** | ${t.desc}`
+          `${i+1}. **${t.date}** | ${t.type === 'income' ? '' : ''} ${t.category} | **${fmtN(t.amount)}** | ${t.desc}`
         ).join('\n');
-        return `🔍 **Found ${results.length} transaction${results.length!==1?'s':''}:**\n${list}`;
+        return ` **Found ${results.length} transaction${results.length!==1?'s':''}:**\n${list}`;
       }
 
       case 'comparison': {
@@ -237,19 +237,19 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
           const inc2 = txs.filter(t => t.type === 'income' && t.date.startsWith(m2)).reduce((s, t) => s + t.amount, 0);
           const expChange = exp1 - exp2;
           const incChange = inc1 - inc2;
-          comparisons.push(`**${m1} vs ${m2}:**\n• Expenses: ${fmtN(exp1)} → ${fmtN(exp2)} (${expChange > 0 ? '📈 +' : '📉 '}${fmtN(Math.abs(expChange))})\n• Income: ${fmtN(inc1)} → ${fmtN(inc2)} (${incChange > 0 ? '📈 +' : '📉 '}${fmtN(Math.abs(incChange))})\n`);
+          comparisons.push(`**${m1} vs ${m2}:**\n Expenses: ${fmtN(exp1)} → ${fmtN(exp2)} (${expChange > 0 ? ' +' : ' '}${fmtN(Math.abs(expChange))})\n Income: ${fmtN(inc1)} → ${fmtN(inc2)} (${incChange > 0 ? ' +' : ' '}${fmtN(Math.abs(incChange))})\n`);
         }
-        return `📊 **Month-over-Month Comparison:**\n${comparisons.join('\n')}`;
+        return ` **Month-over-Month Comparison:**\n${comparisons.join('\n')}`;
       }
 
       case 'forecast': {
         const months = [...new Set(txs.map(t => t.date.slice(0,7)))].sort().slice(-3);
-        if (months.length < 2) return `📈 Not enough data to forecast. Add more transactions!`;
+        if (months.length < 2) return ` Not enough data to forecast. Add more transactions!`;
         const exps = months.map(m => txs.filter(t => t.type === 'expense' && t.date.startsWith(m)).reduce((s, t) => s + t.amount, 0));
         const avgMonthlyExp = exps.reduce((a, b) => a + b, 0) / exps.length;
         const trend = exps[exps.length - 1] > exps[exps.length - 2] ? 'increasing' : 'decreasing';
         const projected = avgMonthlyExp * 1.1;
-        return `📈 **Expense Forecast (Next Month):**\n• Average Monthly: ${fmtN(avgMonthlyExp)}\n• Trend: ${trend} 📊\n• Projected: ${fmtN(projected)}\n\n💡 **Tip:** Budget around ${fmtN(projected)} to be safe.`;
+        return ` **Expense Forecast (Next Month):**\n Average Monthly: ${fmtN(avgMonthlyExp)}\n Trend: ${trend} \n Projected: ${fmtN(projected)}\n\n **Tip:** Budget around ${fmtN(projected)} to be safe.`;
       }
 
       case 'budget': {
@@ -261,7 +261,7 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
         const savingsRate = income>0?((balance/income)*100).toFixed(1):0;
         const recent = [...txs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
         const insightCategoriesText = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,3).map((c,i)=>`${i+1}. ${c[0]} (${fmtN(c[1])})`).join(', ') || 'N/A';
-        return `🔍 **Financial Insights**\n\n• **Savings Rate**: ${savingsRate}%\n• **Spending Health**: ${pct<50?'🟢 Healthy':pct<75?'🟡 Caution':'🔴 High Risk'} (${pct}%)\n• **Top Categories**: ${insightCategoriesText}\n• **Transactions**: ${txs.length} total\n\n**Recent Activity:**\n${recent.map(t=>`• ${t.date}: ${t.desc} ${t.type==='income'?'+':'-'}${fmtN(t.amount)}`).join('\n')}`;
+        return ` **Financial Insights**\n\n **Savings Rate**: ${savingsRate}%\n **Spending Health**: ${pct<50?'<span style="color:var(--accent-green); font-size:1.2em;"></span> Healthy':pct<75?'<span style="color:var(--accent-yellow); font-size:1.2em;"></span> Caution':'<span style="color:var(--accent-red); font-size:1.2em;"></span> High Risk'} (${pct}%)\n **Top Categories**: ${insightCategoriesText}\n **Transactions**: ${txs.length} total\n\n**Recent Activity:**\n${recent.map(t=>` ${t.date}: ${t.desc} ${t.type==='income'?'+':'-'}${fmtN(t.amount)}`).join('\n')}`;
       }
 
       case 'monthly': {
@@ -272,13 +272,13 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
           const label = m==='2026-03'?'March':m==='2026-02'?'February':'January';
           return `**${label}**: Inc ${fmtN(mI)} | Exp ${fmtN(mE)} | Saved ${fmtN(mI-mE)}`;
         });
-        return `📅 **Monthly Breakdown:**\n${out.join('\n')}\n\n📈 Trend: ${txs.filter(t=>t.date.startsWith('2026-03')&&t.type==='expense').reduce((s,t)=>s+t.amount,0) < txs.filter(t=>t.date.startsWith('2026-02')&&t.type==='expense').reduce((s,t)=>s+t.amount,0) ? 'Expenses ↓ down this month ✅':'Expenses ↑ up this month ⚠️'}`;
+        return ` **Monthly Breakdown:**\n${out.join('\n')}\n\n Trend: ${txs.filter(t=>t.date.startsWith('2026-03')&&t.type==='expense').reduce((s,t)=>s+t.amount,0) < txs.filter(t=>t.date.startsWith('2026-02')&&t.type==='expense').reduce((s,t)=>s+t.amount,0) ? 'Expenses ↓ down this month <span style="color:var(--accent-green)">✓</span>':'Expenses ↑ up this month <span style="color:var(--accent-yellow)">!</span>'}`;
       }
 
       case 'improve_advice': {
         const wants = ['Entertainment', 'Shopping', 'Other'];
         const targetMonths = ['2026-03', '2026-02'];
-        let adviceHtml = `💡 **How to spend better based on recent months:**\n\n`;
+        let adviceHtml = ` **How to spend better based on recent months:**\n\n`;
         targetMonths.forEach(m => {
             const mExps = txs.filter(t=>t.type==='expense'&&t.date.startsWith(m));
             if(mExps.length === 0) return;
@@ -286,14 +286,14 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
             const wantTotal = mWants.reduce((s, t) => s + t.amount, 0);
             const mTotal = mExps.reduce((s, t) => s + t.amount, 0);
             if(mTotal > 0 && wantTotal / mTotal > 0.25) {
-               adviceHtml += `• In **${m}**, you spent heavily on Non-Essentials (${fmtN(wantTotal)}, ${(wantTotal/mTotal*100).toFixed(0)}% of expenses). Try reallocating this to savings.\n`;
+               adviceHtml += ` In **${m}**, you spent heavily on Non-Essentials (${fmtN(wantTotal)}, ${(wantTotal/mTotal*100).toFixed(0)}% of expenses). Try reallocating this to savings.\n`;
             } else {
-               adviceHtml += `• In **${m}**, your essential to non-essential ratio was good! Look for minor cuts in utility bills.\n`;
+               adviceHtml += ` In **${m}**, your essential to non-essential ratio was good! Look for minor cuts in utility bills.\n`;
             }
         });
         const worthless = txs.filter(t => t.type === 'expense' && wants.includes(t.category)).sort((a,b)=>b.amount-a.amount).slice(0, 3);
         if(worthless.length > 0) {
-           adviceHtml += `\n🛒 **Transactions that drained your balance the most:**\n`;
+           adviceHtml += `\n **Transactions that drained your balance the most:**\n`;
            worthless.forEach(t => adviceHtml += `  - **${t.category}**: ${fmtN(t.amount)} on ${t.date} for '${t.desc}'\n`);
         }
         return adviceHtml;
@@ -301,41 +301,41 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
 
       case 'post_income_plan': {
         const lastIncome = txs.filter(t => t.type === 'income').sort((a,b)=>b.date.localeCompare(a.date))[0];
-        if(!lastIncome) return "❌ You haven't recorded any income yet!";
+        if(!lastIncome) return "<span style='color:var(--accent-red)'>✕</span> You haven't recorded any income yet!";
         const amt = lastIncome.amount;
-        return `🎉 **Income Received!**\nYou recently got ${fmtN(amt)} as ${lastIncome.category}.\n\nHere is how you can effectively allocate it (50/30/20 Rule):\n• **Needs** (50%): ${fmtN(amt * 0.50)} (Rent, Groceries, Utilities)\n• **Wants** (30%): ${fmtN(amt * 0.30)} (Entertainment, Shopping)\n• **Savings/Invest** (20%): ${fmtN(amt * 0.20)} (Emergency fund, Stocks)\n\n💡 Try to automate moving the 20% to your savings right away!`;
+        return ` **Income Received!**\nYou recently got ${fmtN(amt)} as ${lastIncome.category}.\n\nHere is how you can effectively allocate it (50/30/20 Rule):\n **Needs** (50%): ${fmtN(amt * 0.50)} (Rent, Groceries, Utilities)\n **Wants** (30%): ${fmtN(amt * 0.30)} (Entertainment, Shopping)\n **Savings/Invest** (20%): ${fmtN(amt * 0.20)} (Emergency fund, Stocks)\n\n Try to automate moving the 20% to your savings right away!`;
       }
 
       case 'excessive_warnings': {
-        let warnings = `🚨 **Excessive Spending Alerts:**\n\n`;
+        let warnings = ` **Excessive Spending Alerts:**\n\n`;
         const categoryExtremes = {};
         txs.filter(t=>t.type==='expense').forEach(t=>{ categoryExtremes[t.category] = (categoryExtremes[t.category]||0) + t.amount; });
         const triggerPercent = 0.35; 
         let hasWarning = false;
         Object.entries(categoryExtremes).forEach(([cat, val]) => {
            if(income > 0 && val / income > triggerPercent) {
-              warnings += `⚠️ **${cat}** consumed ${((val/income)*100).toFixed(0)}% of your total income!\n`;
+              warnings += `<span style="color:var(--accent-yellow)">!</span> **${cat}** consumed ${((val/income)*100).toFixed(0)}% of your total income!\n`;
               hasWarning = true;
            }
         });
         const worthlessCats = ['Entertainment', 'Shopping'];
         const worthlessSpend = txs.filter(t=>worthlessCats.includes(t.category)).reduce((s,t)=>s+t.amount,0);
         if(income > 0 && worthlessSpend / income > 0.15) {
-           warnings += `📉 You had a massive income drain on **Shopping & Entertainment** (${fmtN(worthlessSpend)}). These are "worthless" items when in excess!\n`;
+           warnings += ` You had a massive income drain on **Shopping & Entertainment** (${fmtN(worthlessSpend)}). These are "worthless" items when in excess!\n`;
            hasWarning = true;
         }
 
-        if(!hasWarning) return `✅ No excessive warnings. You are managing your money well!`;
+        if(!hasWarning) return `<span style="color:var(--accent-green)">✓</span> No excessive warnings. You are managing your money well!`;
         return warnings;
       }
 
       case 'help': {
-        const apiStatus = isApiKeyConfigured() ? '✅ **AI-Powered Mode** (Gemini API enabled)' : '⚙️ **Local Mode** (No AI configured)';
-        return `Welcome to **FinBot**, your enterprise financial assistant.\n${apiStatus}\n\n**ANALYTICS & INSIGHTS:**\n• "What's my balance?"\n• "Show budget plan"\n• "Top 5 transactions"\n• "Worst 3 expenses"\n• "Monthly insights"\n• "Category breakdown"\n• "Compare months"\n• "Forecast next month"\n\n**TRANSACTION MANAGEMENT:**\n• "Spent 2k on groceries"\n• "Add income of 5k"\n• "Log expense 500 for Netflix"\n• "Find coffee transactions"\n\n**ADMIN ONLY:**\n${role==='admin'?'• "Remove expense of ₹500"\n• "Clear new transactions"\n':''}\n**NATURAL EXAMPLES:**\n• "Best 3 worthy transactions"\n• "My worst spending"\n• "March vs February"\n• "Analyze my spending"`;
+        const apiStatus = isApiKeyConfigured() ? '<span style="color:var(--accent-green)">✓</span> **AI-Powered Mode** (Gemini API enabled)' : ' **Local Mode** (No AI configured)';
+        return `Welcome to **FinBot**, your enterprise financial assistant.\n${apiStatus}\n\n**ANALYTICS & INSIGHTS:**\n "What's my balance?"\n "Show budget plan"\n "Top 5 transactions"\n "Worst 3 expenses"\n "Monthly insights"\n "Category breakdown"\n "Compare months"\n "Forecast next month"\n\n**TRANSACTION MANAGEMENT:**\n "Spent 2k on groceries"\n "Add income of 5k"\n "Log expense 500 for Netflix"\n "Find coffee transactions"\n\n**ADMIN ONLY:**\n${role==='admin'?' "Remove expense of ₹500"\n "Clear new transactions"\n':''}\n**NATURAL EXAMPLES:**\n "Best 3 worthy transactions"\n "My worst spending"\n "March vs February"\n "Analyze my spending"`;
       }
 
       default:
-        return `🤔 I'm not sure about that. Try asking:\n• "What's my balance?"\n• "Show budget plan"\n• "Top spending categories"\n• "Monthly insights"\n\nOr type **help** for all commands.`;
+        return ` I'm not sure about that. Try asking:\n "What's my balance?"\n "Show budget plan"\n "Top spending categories"\n "Monthly insights"\n\nOr type **help** for all commands.`;
     }
   }
 
@@ -344,7 +344,7 @@ ${recent.slice(0,10).map(t=>`  ${t.date} | ${t.type.toUpperCase()} | ${t.categor
     const key   = cfg.GEMINI_API_KEY;
     const model = cfg.GEMINI_MODEL || 'gemini-1.5-flash';
     if (!key || key.trim().length < 10) {
-      throw new Error('❌ Invalid API Key: missing or too short');
+      throw new Error('<span style="color:var(--accent-red)">✕</span> Invalid API Key: missing or too short');
     }
     const systemPrompt = `You are FinBot, an expert personal finance assistant embedded in the FinFlow dashboard.
 Your role is to help users track expenses, understand spending patterns, plan budgets, and get actionable financial insights.
@@ -362,9 +362,9 @@ USER'S FINANCIAL DATA:
 ${context}
 
 When analyzing:
-- If spending > 75% of income: ⚠️ Red zone
-- If spending 50-75%: 🟡 Caution zone
-- If spending < 50%: 🟢 Safe zone
+- If spending > 75% of income: <span style="color:var(--accent-yellow)">!</span> Red zone
+- If spending 50-75%: <span style="color:var(--accent-yellow); font-size:1.2em;"></span> Caution zone
+- If spending < 50%: <span style="color:var(--accent-green); font-size:1.2em;"></span> Safe zone
 
 Provide personalized, actionable advice based on their specific data.`;
 
@@ -381,20 +381,20 @@ Provide personalized, actionable advice based on their specific data.`;
       try {
         const jsonErr = JSON.parse(errData);
         const errorMsg = jsonErr.error?.message || JSON.stringify(jsonErr);
-        if (res.status === 401) throw new Error(`❌ API Authentication Failed\n${errorMsg}`);
-        if (res.status === 403) throw new Error(`❌ API Permission Denied\n${errorMsg}`);
+        if (res.status === 401) throw new Error(`<span style="color:var(--accent-red)">✕</span> API Authentication Failed\n${errorMsg}`);
+        if (res.status === 403) throw new Error(`<span style="color:var(--accent-red)">✕</span> API Permission Denied\n${errorMsg}`);
         if (res.status === 429) throw new Error(`⏱️ Rate Limited. Try again in a moment.\n${errorMsg}`);
-        throw new Error(`❌ API Error (${res.status}): ${errorMsg}`);
+        throw new Error(`<span style="color:var(--accent-red)">✕</span> API Error (${res.status}): ${errorMsg}`);
       } catch (e) {
-        if (e.message.startsWith('❌') || e.message.startsWith('⏱')) throw e;
-        throw new Error(`❌ Gemini API Error (${res.status}): ${errData || 'Unknown error'}`);
+        if (e.message.startsWith('<span style="color:var(--accent-red)">✕</span>') || e.message.startsWith('⏱')) throw e;
+        throw new Error(`<span style="color:var(--accent-red)">✕</span> Gemini API Error (${res.status}): ${errData || 'Unknown error'}`);
       }
     }
     const data = await res.json();
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      throw new Error('❌ Invalid API Response: No content generated.');
+      throw new Error('<span style="color:var(--accent-red)">✕</span> Invalid API Response: No content generated.');
     }
-    return data.candidates[0].content.parts[0].text || '❌ Empty response from API.';
+    return data.candidates[0].content.parts[0].text || '<span style="color:var(--accent-red)">✕</span> Empty response from API.';
   }
 
   function isApiKeyConfigured() {
@@ -422,12 +422,12 @@ Provide personalized, actionable advice based on their specific data.`;
         pendingTx = null;
         if (onAction) onAction({ action: 'add_transaction', tx });
         return {
-          text: `✅ **Confirmed!** Transaction Logged.\n• **📉 Expense**: ₹${tx.amount.toLocaleString('en-IN')}\n• **Category**: ${tx.category}\n• **Description**: ${tx.desc}`,
+          text: `<span style="color:var(--accent-green)">✓</span> **Confirmed!** Transaction Logged.\n ** Expense**: ₹${tx.amount.toLocaleString('en-IN')}\n **Category**: ${tx.category}\n **Description**: ${tx.desc}`,
           action: { type: 'add_transaction', tx }
         };
       } else {
         pendingTx = null;
-        return { text: `❌ **Cancelled.** Expense not added.`, action: null };
+        return { text: `<span style="color:var(--accent-red)">✕</span> **Cancelled.** Expense not added.`, action: null };
       }
     }
 
@@ -439,12 +439,12 @@ Provide personalized, actionable advice based on their specific data.`;
           if (onAction) onAction({ action: 'delete_transaction', tx });
         });
         return {
-          text: `✅ **Confirmed!** Successfully removed **${txsToDelete.length}** transaction(s).`,
+          text: `<span style="color:var(--accent-green)">✓</span> **Confirmed!** Successfully removed **${txsToDelete.length}** transaction(s).`,
           action: null
         };
       } else {
         pendingDelete = null;
-        return { text: `❌ **Cancelled.** No transactions were deleted.`, action: null };
+        return { text: `<span style="color:var(--accent-red)">✕</span> **Cancelled.** No transactions were deleted.`, action: null };
       }
     }
 
@@ -473,7 +473,7 @@ Provide personalized, actionable advice based on their specific data.`;
         if (action && action.action === 'add_transaction') {
           if (!hasBalance(action)) {
             const bal = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0) - txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-            return { text: `❌ **Insufficient balance!**\nAvailable: ₹${bal.toLocaleString('en-IN')}\nRequested: ₹${action.amount.toLocaleString('en-IN')}\n\nCan't add this expense.`, action: null };
+            return { text: `<span style="color:var(--accent-red)">✕</span> **Insufficient balance!**\nAvailable: ₹${bal.toLocaleString('en-IN')}\nRequested: ₹${action.amount.toLocaleString('en-IN')}\n\nCan't add this expense.`, action: null };
           }
           const tx = {
             id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
@@ -485,11 +485,11 @@ Provide personalized, actionable advice based on their specific data.`;
           };
           if (checkRedZone(tx)) {
             pendingTx = tx;
-            return { text: `⚠️ **Red Zone Alert!**\nAdding ₹${tx.amount.toLocaleString('en-IN')} will push your total spending above **75%** of your income.\n\nAre you sure you want to log this expense? (Yes / No)`, action: null };
+            return { text: `<span style="color:var(--accent-yellow)">!</span> **Red Zone Alert!**\nAdding ₹${tx.amount.toLocaleString('en-IN')} will push your total spending above **75%** of your income.\n\nAre you sure you want to log this expense? (Yes / No)`, action: null };
           }
           if (onAction) onAction({ action: 'add_transaction', tx });
           let cleanText = aiText.replace(/```(?:json)?\s*\{.*?\}\s*```/is, '').replace(/\{[^}]*"action"[^}]*\}/is, '').trim();
-          if (!cleanText) cleanText = `✅ **Transaction Added by FinBot AI!**\n• **${tx.type === 'income' ? '📈 Income' : '📉 Expense'}**: ₹${tx.amount.toLocaleString('en-IN')}\n• **Category**: ${tx.category}\n• **Description**: ${tx.desc}`;
+          if (!cleanText) cleanText = `<span style="color:var(--accent-green)">✓</span> **Transaction Added by FinBot AI!**\n **${tx.type === 'income' ? ' Income' : ' Expense'}**: ₹${tx.amount.toLocaleString('en-IN')}\n **Category**: ${tx.category}\n **Description**: ${tx.desc}`;
           return { text: cleanText, action: { type: 'add_transaction', tx } };
         }
         return { text: aiText, action: null };
@@ -497,7 +497,7 @@ Provide personalized, actionable advice based on their specific data.`;
         const errorMsg = err.message || 'Unknown API error';
         console.warn('Gemini API error:', errorMsg);
         if (errorMsg.includes('Invalid API Key') || errorMsg.includes('Authentication Failed') || errorMsg.includes('Permission')) {
-          return { text: `🔴 **API Configuration Error:**\n${errorMsg}\n\n💡 Using Local Engine…`, action: null };
+          return { text: `<span style="color:var(--accent-red); font-size:1.2em;"></span> **API Configuration Error:**\n${errorMsg}\n\n Using Local Engine…`, action: null };
         }
         console.warn('Falling back to local Engine:', errorMsg);
       }
@@ -515,7 +515,7 @@ Provide personalized, actionable advice based on their specific data.`;
         .trim().replace(/\s+/g,' ').trim() || (type === 'income' ? 'Income' : 'Expense');
       const dateStr = new Date().toISOString().split('T')[0];
       if (!amount || amount <= 0) {
-        return { text: `⚠️ I couldn't understand the amount. Try: "Log an expense of ₹500 for supplies"`, action: null };
+        return { text: `<span style="color:var(--accent-yellow)">!</span> I couldn't understand the amount. Try: "Log an expense of ₹500 for supplies"`, action: null };
       }
       const tx = {
         id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
@@ -524,22 +524,22 @@ Provide personalized, actionable advice based on their specific data.`;
       };
       if (!hasBalance(tx)) {
         const bal = txs.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0) - txs.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-        return { text: `❌ **Insufficient balance!**\nAvailable: ₹${bal.toLocaleString('en-IN')}\nRequested: ₹${amount.toLocaleString('en-IN')}`, action: null };
+        return { text: `<span style="color:var(--accent-red)">✕</span> **Insufficient balance!**\nAvailable: ₹${bal.toLocaleString('en-IN')}\nRequested: ₹${amount.toLocaleString('en-IN')}`, action: null };
       }
       if (checkRedZone(tx)) {
         pendingTx = tx;
-        return { text: `⚠️ **Red Zone Alert!**\nAdding ₹${tx.amount.toLocaleString('en-IN')} will push your total spending above **75%** of your income.\n\nAre you sure you want to log this expense? (Yes / No)`, action: null };
+        return { text: `<span style="color:var(--accent-yellow)">!</span> **Red Zone Alert!**\nAdding ₹${tx.amount.toLocaleString('en-IN')} will push your total spending above **75%** of your income.\n\nAre you sure you want to log this expense? (Yes / No)`, action: null };
       }
       if (onAction) onAction({ action: 'add_transaction', tx });
       return {
-        text: `✅ **Transaction Logged!**\n• **${type === 'income' ? '📈 Income' : '📉 Expense'}**: ₹${amount.toLocaleString('en-IN')}\n• **Category**: ${cat}\n• **Description**: ${tx.desc}`,
+        text: `<span style="color:var(--accent-green)">✓</span> **Transaction Logged!**\n **${type === 'income' ? ' Income' : ' Expense'}**: ₹${amount.toLocaleString('en-IN')}\n **Category**: ${cat}\n **Description**: ${tx.desc}`,
         action: { type: 'add_transaction', tx }
       };
     }
 
     if (intent === 'delete') {
       if (role !== 'admin') {
-        return { text: `❌ **Access Denied.** Only admins can delete transactions.`, action: null };
+        return { text: `<span style="color:var(--accent-red)">✕</span> **Access Denied.** Only admins can delete transactions.`, action: null };
       }
 
       // Enhanced delete last N logic
@@ -552,11 +552,11 @@ Provide personalized, actionable advice based on their specific data.`;
             const sorted = [...txs].sort((a,b) => b.date.localeCompare(a.date));
             const toDelete = sorted.slice(0, Math.min(n, 20));
             
-            if (toDelete.length === 0) return { text: `📋 No transactions found to delete.`, action: null };
+            if (toDelete.length === 0) return { text: ` No transactions found to delete.`, action: null };
             
             pendingDelete = toDelete;
             return {
-               text: `⚠️ **Confirm Deletion**\nAre you sure you want to delete the most recent **${toDelete.length}** transaction(s)?\n\n${toDelete.map((t,i)=>`${i+1}. ${t.date} | ${t.desc} | ₹${t.amount}`).join('\n')}\n\nType **Yes** to confirm or **No** to cancel.`,
+               text: `<span style="color:var(--accent-yellow)">!</span> **Confirm Deletion**\nAre you sure you want to delete the most recent **${toDelete.length}** transaction(s)?\n\n${toDelete.map((t,i)=>`${i+1}. ${t.date} | ${t.desc} | ₹${t.amount}`).join('\n')}\n\nType **Yes** to confirm or **No** to cancel.`,
                action: null
             };
          }
@@ -571,18 +571,18 @@ Provide personalized, actionable advice based on their specific data.`;
         matching = txs.filter(t => new RegExp(desc, 'i').test(t.desc)).slice(-3);
       }
       if (matching.length === 0) {
-        return { text: `📋 No matching transactions found.\n\nRecent transactions:\n${txs.slice(0,5).map(t=>`• ${t.date} | ${t.desc} | ₹${t.amount}`).join('\n')}`, action: null };
+        return { text: ` No matching transactions found.\n\nRecent transactions:\n${txs.slice(0,5).map(t=>` ${t.date} | ${t.desc} | ₹${t.amount}`).join('\n')}`, action: null };
       }
       if (matching.length === 1) {
         const tx = matching[0];
         if (onAction) onAction({ action: 'delete_transaction', tx });
         return {
-          text: `✅ **Deleted!** ${tx.type.toUpperCase()} of ₹${tx.amount.toLocaleString('en-IN')} (${tx.desc})`,
+          text: `<span style="color:var(--accent-green)">✓</span> **Deleted!** ${tx.type.toUpperCase()} of ₹${tx.amount.toLocaleString('en-IN')} (${tx.desc})`,
           action: { type: 'delete_transaction', tx }
         };
       }
       return {
-        text: `🔍 Found ${matching.length} matching transactions:\n${matching.map((t,i)=>`${i+1}. ${t.date} | ${t.desc} | ₹${t.amount}`).join('\n')}\n\nBe more specific (use date or exact amount)`,
+        text: ` Found ${matching.length} matching transactions:\n${matching.map((t,i)=>`${i+1}. ${t.date} | ${t.desc} | ₹${t.amount}`).join('\n')}\n\nBe more specific (use date or exact amount)`,
         action: null
       };
     }
