@@ -16,7 +16,12 @@ export default function LandingPage({ onEnter }) {
   };
 
   return (
-    <div className="landing-container" data-theme="dark">
+    <div className="landing-container" data-theme={theme}>
+      <div className="landing-header">
+        <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+      </div>
       <div className="landing-bg">
         <div className="grid-3d"></div>
         <div className="floating-sphere"></div>

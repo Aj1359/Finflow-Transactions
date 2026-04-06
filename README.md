@@ -115,7 +115,7 @@ src/
 
 ---
 
-## 🧠 Architecture Highlights
+##  Architecture Highlights
 
 - Modular component-based design  
 - Scalable state management without Redux overhead  
@@ -124,7 +124,7 @@ src/
 
 ---
 
-## ✅ Assignment Compliance
+##  Assignment Compliance
 
 - ✔ Premium UI with animations & theming  
 - ✔ Fully migrated to React architecture  
@@ -135,14 +135,14 @@ src/
 
 ---
 
-## 👨‍💻 Developer
+##  Developer
 
 **Aditya Jha**  
 B.Tech Student | FinTech Society Coordinator | Builder  
 
 ---
 
-## 🌟 Future Enhancements
+##  Future Enhancements
 
 - Cloud sync (Firebase / Supabase)  
 - Multi-user collaboration  

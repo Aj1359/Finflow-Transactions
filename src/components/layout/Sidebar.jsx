@@ -1,7 +1,7 @@
 import { useStore } from '../../store/useFinFlowStore';
 import { Home, CreditCard, BarChart2, Shield, Save, Target } from 'lucide-react';
 
-export default function Sidebar({ chatOpen, onToggleChat, onCloseSidebar }) {
+export default function Sidebar({ open, chatOpen, onToggleChat, onCloseSidebar }) {
   const { state, navigate, setRole } = useStore();
   const { activeSection, role } = state;
 
@@ -11,7 +11,7 @@ export default function Sidebar({ chatOpen, onToggleChat, onCloseSidebar }) {
   };
 
   return (
-    <aside className="sidebar" id="sidebar">
+    <aside className={`sidebar${open ? ' open' : ''}`} id="sidebar">
       {/* Logo */}
       <div className="sidebar-logo">
         <div className="logo-icon">

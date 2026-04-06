@@ -25,6 +25,7 @@ export default function AppLayout({ children }) {
       <div className="app-layout">
         {/* Sidebar */}
         <Sidebar 
+          open={sidebarOpen}
           onToggleChat={toggleChat} 
           onCloseSidebar={closeSidebar} 
         />
