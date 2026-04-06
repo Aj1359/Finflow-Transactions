@@ -16,7 +16,6 @@ export default function LandingPage({ onEnter }) {
   };
 
   return (
-  return (
     <div className="landing-container" data-theme={theme}>
       <div className="landing-top-bar">
         <button className="theme-toggle-btn-premium" onClick={toggleTheme} aria-label="Toggle Theme">
