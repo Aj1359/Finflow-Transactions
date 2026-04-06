@@ -68,12 +68,11 @@ export default function BudgetPage() {
             const isWarning = limit > 0 && percent > 85 && !isOver;
             
             return (
-              <div key={cat} className="budget-card-pro" style={{ 
+              <div key={cat} className="budget-card-pro pro-3d-card" style={{ 
                 background: 'var(--bg-card)', 
                 padding: '24px', 
                 borderRadius: 'var(--radius-lg)', 
                 boxShadow: 'var(--shadow-card)',
-                transition: 'transform 0.2s ease',
                 position: 'relative',
                 overflow: 'hidden'
               }}>

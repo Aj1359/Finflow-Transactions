@@ -29,6 +29,14 @@ export const SEED_DATA = [
   { id:'t026', date:'2026-01-15', desc:'Grocery Shopping',      category:'Food',         type:'expense', amount:210 },
   { id:'t027', date:'2026-01-20', desc:'Freelance Project',     category:'Freelance',    type:'income',  amount:950 },
   { id:'t028', date:'2026-01-25', desc:'Doctor Visit',          category:'Health',       type:'expense', amount:75 },
+  
+  // April 2026 Data
+  { id:'t029', date:'2026-04-01', desc:'Monthly Salary',        category:'Salary',       type:'income',  amount:6200 },
+  { id:'t030', date:'2026-04-02', desc:'Rent Payment',          category:'Housing',      type:'expense', amount:1500 },
+  { id:'t031', date:'2026-04-04', desc:'Client Retainer',       category:'Freelance',    type:'income',  amount:2500 },
+  { id:'t032', date:'2026-04-05', desc:'Organic Groceries',     category:'Food',         type:'expense', amount:310 },
+  { id:'t033', date:'2026-04-06', desc:'Aviation Tech Conf',    category:'Education',    type:'expense', amount:850 },
+  { id:'t034', date:'2026-04-06', desc:'Uber Premium',          category:'Transport',    type:'expense', amount:45 },
 ];
 
 export const CATEGORIES = [

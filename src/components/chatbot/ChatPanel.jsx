@@ -2,18 +2,18 @@ import { useState, useRef, useEffect } from 'react';
 import { FinBot } from '../../lib/chatbot';
 import { useStore } from '../../store/useFinFlowStore';
 import { useAppToast } from '../../App';
-import FINFLOW_CONFIG from '../../config/finflow.config';
-import { Settings, Trash2, X, Send, Bot, User, Zap, MessageSquareWarning, Wallet, BarChart2, Award, Calendar, Search } from 'lucide-react';
+import { Settings, Trash2, X, Send, Bot, User, Zap, MessageSquareWarning, Wallet, BarChart2, Award, Calendar, Search, ShieldCheck } from 'lucide-react';
 
 function markdownToHtml(text) {
+  if (!text) return '';
   return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\*\*(.+?)\*\*/g, '<b style="color:var(--text-primary)">$1</b>')
+    .replace(/\*(.+?)\*/g, '<i>$1</i>')
     .replace(/\n/g, '<br>');
 }
 
 export default function ChatPanel({ open, onClose }) {
-  const { state, addTx, deleteTx } = useStore();
+  const { state, addTx, deleteTx, setBudget } = useStore();
   const toast = useAppToast();
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('finflow_chat_history');
@@ -22,231 +22,172 @@ export default function ChatPanel({ open, onClose }) {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [clearConfirm, setClearConfirm] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('finflow_gemini_key') || '');
-  const [aiMode, setAiMode] = useState(() => {
-    const k = localStorage.getItem('finflow_gemini_key') || FINFLOW_CONFIG.GEMINI_API_KEY || '';
-    return k.length > 10 ? 'gemini' : 'local';
-  });
   const msgsRef = useRef(null);
   const inputRef = useRef(null);
+  const isDark = state.theme === 'dark';
 
   useEffect(() => {
     localStorage.setItem('finflow_chat_history', JSON.stringify(messages));
-    if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
+    if (msgsRef.current) msgsRef.current.scrollTo({ top: msgsRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
   useEffect(() => {
     if (open && messages.length === 0) {
-      const welcome = { 
+      setMessages([{ 
         id: 'welcome', 
         role: 'bot', 
-        text: 'Welcome to **FinBot**, your enterprise financial assistant.\n\nI am equipped to provide deep insights into your financial data. How may I assist you today?\n\nTry: **"Show budget plan"** or **"What is my balance?"**' 
-      };
-      setMessages([welcome]);
-    }
-    if (open) {
-      setTimeout(() => inputRef.current?.focus(), 300);
-      setClearConfirm(false);
+        text: 'Greetings. I am **FinBot**, your dedicated financial intelligence companion.\n\nI have audited your enterprise data and I am ready to assist with budget adjustments, expenditure tracking, or deep-dive analysis.' 
+      }]);
     }
   }, [open]);
 
-  // Use this effect only for scrolling if needed, but the merged one above is better
-  /*
-  useEffect(() => {
-    if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
-  }, [messages]);
-  */
-
-  const appendBot = (text, isTyping = false) => {
-    setMessages(prev => [...prev, { id: Date.now() + Math.random(), role: 'bot', text, isTyping }]);
-  };
-  const appendUser = text => {
-    setMessages(prev => [...prev, { id: Date.now() + Math.random(), role: 'user', text }]);
-  };
-  const removeTyping = () => {
-    setMessages(prev => prev.filter(m => !m.isTyping));
-  };
-
-  const handleSend = async () => {
-    const text = input.trim();
+  const handleSend = async (overrideText) => {
+    const text = (overrideText || input).trim();
     if (!text || sending) return;
-    setInput('');
-    appendUser(text);
+    if (!overrideText) setInput('');
+    
+    setMessages(prev => [...prev, { id: Date.now(), role: 'user', text }]);
     setSending(true);
-    appendBot('', true); // typing indicator
 
     try {
       const { text: reply, action } = await FinBot.processMessage(text, state.transactions, act => {
-        if (act.action === 'add_transaction' && act.tx) {
-          addTx(act.tx);
-          toast('FinBot added a transaction!', 'success');
-        }
-        if (act.action === 'add_budget' && act.category) {
-          setBudget(act.category, act.amount);
-          toast(`Budget for ${act.category} updated!`, 'success');
-        }
-        if (act.action === 'delete_transaction' && act.tx) {
-          deleteTx(act.tx.id);
-          toast(`FinBot deleted: ${act.tx.desc}`, 'success');
-        }
-        if (act.action === 'clear_chat') {
-          clearChatDirect();
-        }
+        if (act.action === 'add_transaction') { addTx(act.tx); toast('Intelligence added transaction.', 'info'); }
+        if (act.action === 'set_budget') { setBudget(act.category, act.amount); toast(`${act.category} budget optimized.`, 'info'); }
+        if (act.action === 'clear_chat') setMessages([]);
       }, state.role, state.budgets);
-      removeTyping();
-      appendBot(reply);
+      
+      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', text: reply }]);
     } catch (err) {
-      removeTyping();
-      appendBot('❌ Something went wrong: ' + err.message);
-    }
-    setSending(false);
-    inputRef.current?.focus();
-  };
-
-  const handleQuick = msg => {
-    setInput(msg);
-    setTimeout(() => { setInput(''); appendUser(msg); handleSendRaw(msg); }, 0);
-  };
-
-  const handleSendRaw = async msg => {
-    setSending(true);
-    appendBot('', true);
-    try {
-      const { text: reply } = await FinBot.processMessage(msg, state.transactions, act => {
-        if (act.action === 'add_transaction' && act.tx) { addTx(act.tx); toast('FinBot added a transaction!', 'success'); }
-        if (act.action === 'add_budget' && act.category) { setBudget(act.category, act.amount); toast(`Budget updated!`, 'success'); }
-      }, state.role, state.budgets);
-      removeTyping();
-      appendBot(reply);
-    } catch (err) {
-      removeTyping();
-      appendBot('❌ ' + err.message);
+      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', text: 'Error in cognitive path: ' + err.message }]);
     }
     setSending(false);
   };
 
-  const saveApiKey = () => {
-    localStorage.setItem('finflow_gemini_key', apiKey);
-    window.FINFLOW_CONFIG.GEMINI_API_KEY = apiKey;
-    setAiMode(apiKey.length > 10 ? 'gemini' : 'local');
-    setSettingsOpen(false);
-    toast(apiKey ? '✅ Gemini API key saved! AI mode activated.' : '⚡ Switched to local RAG mode.', 'success');
-  };
-
-  const clearChatDirect = () => {
-    setMessages([]);
-    localStorage.removeItem('finflow_chat_history');
-    appendBot('Chat cleared! Ask me anything 💬');
-    setClearConfirm(false);
-  };
-
-  const handleClearRequest = () => {
-    if (clearConfirm) {
-      clearChatDirect();
-    } else {
-      setClearConfirm(true);
-      setTimeout(() => setClearConfirm(false), 3000);
-    }
-  };
+  if (!open) return null;
 
   return (
-    <div className={`chat-panel${open ? ' open' : ''}`} id="chat-panel">
-      {/* Header */}
-      <div className="chat-header">
-        <div className="chat-avatar" style={{ padding: 0, overflow: 'hidden' }}>
-          <img src="/ai-avatar.png" alt="FinBot AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-        <div className="chat-header-info">
-          <div className="chat-header-name">FinBot AI</div>
-          <div className="chat-header-status">
-            <div className="status-dot" />
-            <span id="chat-mode-label">{aiMode === 'gemini' ? 'Gemini AI Mode' : 'Local RAG Mode'}</span>
-          </div>
-        </div>
-        <div className="chat-header-actions" style={{ display: 'flex', gap: '4px' }}>
-          <button className="chat-head-btn" title="API Settings" onClick={() => setSettingsOpen(v => !v)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Settings size={18} />
-          </button>
-          <button 
-            className={`chat-head-btn ${clearConfirm ? 'confirming' : ''}`} 
-            title={clearConfirm ? "Click again to confirm" : "Clear chat"} 
-            onClick={handleClearRequest}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', ...(clearConfirm ? { background: 'var(--accent-red)', color: '#fff' } : {}) }}
-          >
-            {clearConfirm ? <MessageSquareWarning size={18} /> : <Trash2 size={18} />}
-          </button>
-          <button className="chat-head-btn" onClick={onClose} title="Close" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={18} />
-          </button>
-        </div>
-      </div>
+    <div className="pro-chat-panel" style={{
+      position: 'fixed',
+      bottom: '90px',
+      right: '24px',
+      width: '420px',
+      height: '650px',
+      background: isDark ? 'rgba(15, 15, 20, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+      backdropFilter: 'blur(16px) saturate(180%)',
+      borderRadius: '24px',
+      boxShadow: '0 20px 50px rgba(0,0,0,0.3), 0 0 0 1px rgba(168, 85, 247, 0.2)',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      zIndex: 1001,
+      animation: 'chat-slide-in 0.5s cubic-bezier(0.19, 1, 0.22, 1)'
+    }}>
+      <style>{`
+        @keyframes chat-slide-in { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .pro-chat-msg.bot { align-self: flex-start; background: var(--bg-secondary); color: var(--text-primary); border-top-left-radius: 4px; }
+        .pro-chat-msg.user { align-self: flex-end; background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; border-top-right-radius: 4px; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3); }
+      `}</style>
 
-      {/* Settings */}
-      <div className={`chat-settings${settingsOpen ? ' visible' : ''}`}>
-        <label>Gemini API Key <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optional — for AI-powered answers)</span></label>
-        <input type="password" id="gemini-key-input" placeholder="AIza…" value={apiKey} onChange={e => setApiKey(e.target.value)} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className={`ai-mode-badge ${aiMode === 'gemini' ? 'ai-mode-gemini' : 'ai-mode-local'}`} id="ai-badge" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {aiMode === 'gemini' ? <><Bot size={14} /> Gemini AI</> : <><Zap size={14} /> Local RAG</>}
-          </span>
-          <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.78rem' }} onClick={saveApiKey}>Save Key</button>
+      {/* Premium Header */}
+      <div style={{ padding: '20px', borderBottom: '1px solid rgba(168, 85, 247, 0.15)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #a855f7, #6b21a8)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(168, 85, 247, 0.4)' }}>
+          <ShieldCheck color="white" size={24} />
         </div>
-        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 8 }}>
-          Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-blue)' }}>aistudio.google.com</a>
-        </p>
-      </div>
-
-      {/* Messages */}
-      <div className="chat-messages" id="chat-messages" ref={msgsRef}>
-        {messages.map(m => (
-          <div key={m.id} className={`chat-msg ${m.role}`}>
-            <div className="msg-avatar" style={{ padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              {m.role === 'bot' 
-                ? <img src="/ai-avatar.png" alt="Bot" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> 
-                : <User size={16} />
-              }
-            </div>
-            <div className="msg-bubble">
-              {m.isTyping
-                ? <div className="typing-dots"><span/><span/><span/></div>
-                : <span dangerouslySetInnerHTML={{ __html: markdownToHtml(m.text) }} />
-              }
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Quick prompts */}
-      <div className="chat-quick-prompts" id="chat-quick-prompts">
-        {[
-          ['Balance', "What is my balance?", <Wallet size={16} />],
-          ['Budget',  "Show budget plan", <BarChart2 size={16} />],
-          ['Top Spend',"Top spending categories", <Award size={16} />],
-          ['Monthly', "Monthly insights", <Calendar size={16} />],
-          ['Insights', "Financial insights", <Search size={16} />],
-        ].map(([label, msg, icon]) => (
-          <button key={label} className="quick-prompt" onClick={() => handleQuick(msg)} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>{icon}</span> {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Input */}
-      <div className="chat-input-area">
-        <input
-          className="chat-input"
-          id="chat-input"
-          type="text"
-          ref={inputRef}
-          placeholder='Ask FinBot… e.g. "Add expense ₹500"'
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-        />
-        <button className="chat-send" id="chat-send-btn" onClick={handleSend} aria-label="Send" disabled={sending} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Send size={18} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>FinBot Enterprise</div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--accent-purple)', fontWeight: 600 }}>Active Intelligence Agent</div>
+        </div>
+        <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', opacity: 0.6, transition: '0.2s' }} onMouseOver={e=>e.target.style.opacity=1} onMouseOut={e=>e.target.style.opacity=0.6}>
+          <X size={20} />
         </button>
+      </div>
+
+      {/* Messages Scroll Area */}
+      <div ref={msgsRef} style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {messages.map(m => (
+          <div key={m.id} className={`pro-chat-msg ${m.role}`} style={{
+            maxWidth: '85%',
+            padding: '12px 16px',
+            borderRadius: '18px',
+            fontSize: '0.9rem',
+            lineHeight: '1.5',
+            position: 'relative',
+            animation: 'msg-fade-in 0.3s ease-out'
+          }}>
+            <div dangerouslySetInnerHTML={{ __html: markdownToHtml(m.text) }} />
+          </div>
+        ))}
+      </div>
+
+      {/* Intelligence Suggestions */}
+      <div style={{ padding: '0 20px 10px', display: 'flex', gap: '8px', overflowX: 'auto', whiteSpace: 'nowrap' }} className="no-scrollbar">
+        {[
+          ['Audit', <ShieldCheck size={14} />, "Financial audit"],
+          ['Budget', <BarChart2 size={14} />, "Show budget plan"],
+          ['Forecast', <Zap size={14} />, "Spending forecast"]
+        ].map(([label, icon, msg]) => (
+          <button key={label} onClick={() => handleSend(msg)} style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid rgba(168, 85, 247, 0.1)',
+            padding: '6px 12px',
+            borderRadius: '20px',
+            fontSize: '0.75rem',
+            color: 'var(--text-primary)',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            transition: '0.2s'
+          }}>
+            {icon}{label}
+          </button>
+        ))}
+      </div>
+
+      {/* Executive Input Area */}
+      <div style={{ padding: '20px', background: 'rgba(0,0,0,0.03)', borderTop: '1px solid rgba(168, 85, 247, 0.1)' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <input 
+            ref={inputRef}
+            type="text"
+            placeholder="Instruct FinBot..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSend()}
+            style={{
+              width: '100%',
+              background: 'var(--bg-secondary)',
+              border: 'none',
+              padding: '14px 50px 14px 20px',
+              borderRadius: '16px',
+              color: 'var(--text-primary)',
+              fontSize: '0.9rem',
+              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)'
+            }}
+          />
+          <button 
+            disabled={sending}
+            onClick={() => handleSend()}
+            style={{
+              position: 'absolute',
+              right: '8px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #a855f7, #6b21a8)',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              cursor: 'pointer',
+              boxShadow: '0 4px 10px rgba(168, 85, 247, 0.4)'
+            }}
+          >
+            <Send size={18} strokeWidth={2.5} />
+          </button>
+        </div>
       </div>
     </div>
   );

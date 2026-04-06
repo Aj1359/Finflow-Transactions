@@ -24,28 +24,41 @@ export default function TrendChart() {
     const labels   = months.map(m => monthLabel(m));
     const incData  = months.map(m => incByMonth[m] || 0);
     const expData  = months.map(m => expByMonth[m] || 0);
-    const incColor = isDark ? '#cdbdff' : '#7c3aed';
-    const expColor = isDark ? '#00daf3' : '#0ea5e9';
+
+    const ctx = canvasRef.current.getContext('2d');
+    const incGrad = ctx.createLinearGradient(0, 0, 0, 400);
+    incGrad.addColorStop(0, isDark ? '#00f5ff' : '#7c3aed');
+    incGrad.addColorStop(0.5, isDark ? 'rgba(0, 245, 255, 0.7)' : 'rgba(124, 58, 237, 0.7)');
+    incGrad.addColorStop(1, isDark ? 'rgba(0, 245, 255, 0.3)' : 'rgba(124, 58, 237, 0.3)');
+
+    const expGrad = ctx.createLinearGradient(0, 0, 0, 400);
+    expGrad.addColorStop(0, isDark ? '#ff00ff' : '#f59e0b');
+    expGrad.addColorStop(0.5, isDark ? 'rgba(255, 0, 255, 0.7)' : 'rgba(245, 158, 11, 0.7)');
+    expGrad.addColorStop(1, isDark ? 'rgba(255, 0, 255, 0.3)' : 'rgba(245, 158, 11, 0.3)');
 
     if (chartRef.current) chartRef.current.destroy();
     chartRef.current = new Chart(canvasRef.current, {
-      type: 'bar', // Better for vertical growth visualization
+      type: 'bar',
       data: {
         labels,
         datasets: [
           {
             label: 'Income',
             data: incData,
-            backgroundColor: isDark ? 'rgba(0, 245, 255, 0.85)' : 'rgba(167, 139, 250, 0.85)',
-            borderRadius: 6,
-            barThickness: 24
+            backgroundColor: incGrad,
+            borderRadius: 8,
+            barThickness: 24,
+            borderWidth: 1,
+            borderColor: isDark ? 'rgba(0, 245, 255, 0.4)' : 'transparent'
           },
           {
             label: 'Expenses',
             data: expData,
-            backgroundColor: isDark ? 'rgba(255, 0, 255, 0.85)' : 'rgba(251, 191, 36, 0.85)',
-            borderRadius: 6,
-            barThickness: 24
+            backgroundColor: expGrad,
+            borderRadius: 8,
+            barThickness: 24,
+            borderWidth: 1,
+            borderColor: isDark ? 'rgba(255, 0, 255, 0.4)' : 'transparent'
           }
         ]
       },
@@ -72,8 +85,9 @@ export default function TrendChart() {
           }
         },
         animation: {
-          duration: 1500,
-          easing: 'easeOutQuart'
+          duration: 2200,
+          easing: 'easeInOutQuart',
+          delay: 200
         }
       }
     });

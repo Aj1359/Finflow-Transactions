@@ -27,13 +27,27 @@ export default function DonutChart() {
       type: 'doughnut',
       data: {
         labels: cats,
-        datasets: [{ data: vals, backgroundColor: cols, borderColor: isDark ? '#111827' : '#ffffff', borderWidth: 3, hoverOffset: 8 }]
+        datasets: [{ 
+          data: vals, 
+          backgroundColor: cols, 
+          borderColor: isDark ? '#0a0a0f' : '#ffffff', 
+          borderWidth: 4, 
+          hoverOffset: 15,
+          spacing: 5,
+          borderRadius: 8
+        }]
       },
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '68%',
         plugins: {
           legend: { position: 'right', labels: { color: isDark ? '#94a3b8' : '#5a6478', font: { size: 11, family: 'Inter' }, padding: 12, boxWidth: 12, boxHeight: 12, usePointStyle: true, pointStyleWidth: 12 } },
           tooltip: { backgroundColor: isDark ? '#111827' : '#ffffff', titleColor: isDark ? '#e8eaf6' : '#0d1117', bodyColor: isDark ? '#94a3b8' : '#5a6478', borderColor: isDark ? '#1e2d4a' : '#e2e6f0', borderWidth: 1, padding: 12, cornerRadius: 12, callbacks: { label: ctx => ` ${ctx.label}: ${fmt(ctx.parsed)}` } }
+        },
+        animation: {
+          duration: 2000,
+          animateRotate: true,
+          animateScale: true,
+          easing: 'easeOutBack'
         }
       }
     });

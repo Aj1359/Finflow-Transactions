@@ -15,10 +15,12 @@ export default function DashboardPage() {
 
   return (
     <section className={`section${isActive ? ' active' : ''}`} id="section-dashboard">
-      <div className="section-header">
+      <div className="section-header" style={{ marginBottom: '32px' }}>
         <div>
-          <h2>Overview</h2>
-          <p>All-time financial summary across all transactions</p>
+          <h2 style={{ fontSize: '1.8rem', letterSpacing: '-0.5px' }}>Business Intelligence</h2>
+          <p style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8 }}>
+            <span className="brand-dot small" /> Financial Ledger & Strategic Overview
+          </p>
         </div>
       </div>
 

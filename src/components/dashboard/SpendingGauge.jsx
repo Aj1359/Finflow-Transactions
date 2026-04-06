@@ -1,11 +1,26 @@
+import React, { useState, useEffect } from 'react';
 import { computeTotals } from '../../lib/utils';
 import { useStore } from '../../store/useFinFlowStore';
 
 export default function SpendingGauge() {
   const { state } = useStore();
   const { income, expenses } = computeTotals(state.transactions);
-  const pct = income > 0 ? (expenses / income) * 100 : 0;
+  const targetPct = income > 0 ? (expenses / income) * 100 : 0;
+  const [pct, setPct] = useState(0);
   const isDark = state.theme === 'dark';
+
+  useEffect(() => {
+    const duration = 2000;
+    const startTime = performance.now();
+    const animate = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 4); // Quart easing
+      setPct(targetPct * ease);
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [targetPct]);
 
   const R = 70, CX = 80, CY = 80;
   const startAngle = Math.PI;
