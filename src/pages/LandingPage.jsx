@@ -16,10 +16,12 @@ export default function LandingPage({ onEnter }) {
   };
 
   return (
+  return (
     <div className="landing-container" data-theme={theme}>
-      <div className="landing-header">
-        <button className="theme-toggle-btn" onClick={toggleTheme} title="Toggle Theme">
-          {theme === 'dark' ? '☀️' : '🌙'}
+      <div className="landing-top-bar">
+        <button className="theme-toggle-btn-premium" onClick={toggleTheme} aria-label="Toggle Theme">
+          {theme === 'dark' ? <span className="icon-sun">☀️</span> : <span className="icon-moon">🌙</span>}
+          <span className="toggle-text">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
         </button>
       </div>
       <div className="landing-bg">
