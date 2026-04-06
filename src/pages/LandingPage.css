@@ -26,7 +26,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 100px;
-  color: inherit;
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(20px);
@@ -35,23 +35,41 @@
 }
 
 .landing-container[data-theme="light"] .theme-toggle-btn-premium {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.8);
   border-color: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .theme-toggle-btn-premium:hover {
   transform: translateY(-2px);
   border-color: var(--accent-purple);
-  background: rgba(167, 139, 250, 0.1);
+  box-shadow: 0 15px 35px rgba(124, 58, 237, 0.2);
 }
 
 .toggle-text { font-size: 0.85rem; }
 
+/* Entry Cards Refresh */
+.landing-container[data-theme="light"] .entry-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+}
+
+.landing-container[data-theme="light"] .entry-text h3 {
+  color: #1e293b;
+}
+
+.landing-container[data-theme="light"] .entry-icon {
+  background: #f1f5f9;
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
 @media (max-width: 768px) {
   .landing-top-bar {
     top: 20px;
-    right: 50%;
-    transform: translateX(50%);
+    right: 20px;
+    transform: none;
   }
 }
 

@@ -42,7 +42,7 @@ export default function LandingPage({ onEnter }) {
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
               </defs>
-              <rect width="100" height="100" rx="30" fill="#0c0c12" stroke="url(#execGrad)" strokeWidth="2" />
+              <rect width="100" height="100" rx="30" fill={theme === 'dark' ? '#0c0c12' : '#ffffff'} stroke="url(#execGrad)" strokeWidth="2" />
               <path d="M 25 70 C 20 90 65 85 75 55 C 82 35 88 15 88 15" fill="none" stroke="url(#execGrad)" strokeWidth="10" strokeLinecap="round" filter="url(#execGlow)" />
               <path d="M 92 10 L 70 20 L 85 35 Z" fill="var(--accent-yellow)" />
             </svg>
