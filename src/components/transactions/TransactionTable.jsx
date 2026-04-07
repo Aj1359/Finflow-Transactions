@@ -6,13 +6,14 @@ import { Search, TrendingDown, TrendingUp, Calendar, Trash2 } from 'lucide-react
 export default function TransactionTable() {
   const { state, deleteTx, setSort } = useStore();
   const toast = useAppToast();
-  const { transactions, role, sortKey, sortDir, filterType, filterCat, search } = state;
+  const { transactions, role, sortKey, sortDir, filterType, filterCat, filterMonth, search } = state;
 
   // Filter
   let txs = [...transactions];
   if (search)            txs = txs.filter(t => t.desc.toLowerCase().includes(search.toLowerCase()) || t.category.toLowerCase().includes(search.toLowerCase()));
   if (filterType !== 'all') txs = txs.filter(t => t.type === filterType);
   if (filterCat  !== 'all') txs = txs.filter(t => t.category === filterCat);
+  if (filterMonth !== 'all') txs = txs.filter(t => t.date.startsWith(filterMonth));
 
   // Sort
   txs.sort((a, b) => {

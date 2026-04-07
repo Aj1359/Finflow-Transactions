@@ -17,6 +17,9 @@ export default function TransactionsPage() {
   const isActive = state.activeSection === 'transactions';
   const isAdmin  = state.role === 'admin';
 
+  // Extract unique months for filter
+  const uniqueMonths = [...new Set(state.transactions.map(t => t.date.slice(0, 7)))].sort().reverse();
+
   const exportCSV = () => {
     const { transactions } = state;
     const headers = ['Date','Description','Category','Type','Amount'];
@@ -77,6 +80,10 @@ export default function TransactionsPage() {
             <option value="all">All Types</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
+          </select>
+          <select id="filter-month" className="filter-select" value={state.filterMonth} onChange={e => setFilter('filterMonth', e.target.value)}>
+            <option value="all">All Months</option>
+            {uniqueMonths.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
           <select id="filter-cat" className="filter-select" value={state.filterCat} onChange={e => setFilter('filterCat', e.target.value)}>
             <option value="all">All Categories</option>

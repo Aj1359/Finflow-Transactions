@@ -9,7 +9,7 @@ export default function LandingPage({ onEnter }) {
   const { theme } = state;
 
   React.useEffect(() => {
-    setTheme('light');
+    setTheme('dark');
   }, [setTheme]);
 
   const handleEnter = (role) => {
@@ -40,7 +40,7 @@ export default function LandingPage({ onEnter }) {
             <Logo size={120} theme={theme} />
           </div>
           
-          <h1 className="executive-title">FinFlow</h1>
+          <h1 className="executive-title"><span className="finflow-gradient">FinFlow</span></h1>
           <p className="executive-tagline">ENTERPRISE-GRADE AI FINANCIAL INTELLIGENCE</p>
         </div>
 

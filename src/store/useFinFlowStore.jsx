@@ -18,6 +18,7 @@ function loadState() {
       sortDir:       'desc',
       filterType:    'all',
       filterCat:     'all',
+      filterMonth:   'all',
       search:        '',
       activeSection: 'dashboard',
     };
@@ -26,7 +27,7 @@ function loadState() {
       transactions: [...SEED_DATA],
       role: 'admin', theme: 'light', budgets: {},
       sortKey: 'date', sortDir: 'desc',
-      filterType: 'all', filterCat: 'all', search: '', activeSection: 'dashboard',
+      filterType: 'all', filterCat: 'all', filterMonth: 'all', search: '', activeSection: 'dashboard',
     };
   }
 }
