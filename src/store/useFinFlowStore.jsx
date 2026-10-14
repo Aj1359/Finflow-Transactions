@@ -98,6 +98,19 @@ function reducer(state, action) {
       persist(next);
       return next;
     }
+    case 'SET_BUDGETS': {
+      let updatedBudgets = { ...state.budgets };
+      if (Array.isArray(action.budgets)) {
+        action.budgets.forEach(b => {
+          if (b.category) updatedBudgets[b.category] = b.amount;
+        });
+      } else if (action.budgets && typeof action.budgets === 'object') {
+        updatedBudgets = { ...updatedBudgets, ...action.budgets };
+      }
+      const next = { ...state, budgets: updatedBudgets };
+      persist(next);
+      return next;
+    }
     case 'NAVIGATE':      return { ...state, activeSection: action.section };
     case 'SET_SORT':      return { ...state, sortKey: action.key, sortDir: action.dir };
     case 'SET_FILTER':    return { ...state, [action.field]: action.value };
@@ -123,12 +136,13 @@ export function FinFlowProvider({ children }) {
   const setRole  = useCallback(role  => dispatch({ type: 'SET_ROLE',  role }),  []);
   const setTheme = useCallback(theme => dispatch({ type: 'SET_THEME', theme }), []);
   const setBudget = useCallback((category, amount) => dispatch({ type: 'SET_BUDGET', category, amount }), []);
+  const setBudgets = useCallback(budgets => dispatch({ type: 'SET_BUDGETS', budgets }), []);
   const navigate = useCallback(section => dispatch({ type: 'NAVIGATE', section }), []);
   const setSort  = useCallback((key, dir) => dispatch({ type: 'SET_SORT', key, dir }), []);
   const setFilter = useCallback((field, value) => dispatch({ type: 'SET_FILTER', field, value }), []);
 
   return (
-    <StoreCtx.Provider value={{ state, addTx, deleteTx, resetTx, setRole, setTheme, setBudget, navigate, setSort, setFilter }}>
+    <StoreCtx.Provider value={{ state, addTx, deleteTx, resetTx, setRole, setTheme, setBudget, setBudgets, navigate, setSort, setFilter }}>
 
       {children}
     </StoreCtx.Provider>
