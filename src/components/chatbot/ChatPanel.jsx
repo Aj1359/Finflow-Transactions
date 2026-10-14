@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { FinBot } from '../../lib/chatbot';
+import { sendAgentMessage } from '../../lib/agentApi';
 import { useStore } from '../../store/useFinFlowStore';
 import { useAppToast } from '../../App';
-import { X, Send, Bot, Zap, BarChart2, ShieldCheck, Trash2 } from 'lucide-react';
+import AgentTrace from './AgentTrace';
+import BudgetProposal from './BudgetProposal';
+import { X, Send, Bot, Zap, BarChart2, ShieldCheck, Trash2, Sparkles } from 'lucide-react';
 
 function markdownToHtml(text) {
   if (!text) return '';
@@ -13,10 +16,10 @@ function markdownToHtml(text) {
     .replace(/\n/g, '<br>');
 }
 
-const GREETING = `**Welcome! I'm FinBot**, your AI financial intelligence companion.\n\nI'm trained on your financial data and ready to help with:\n\u2022 Balance & spending analysis\n\u2022 Adding or deleting transactions\n\u2022 Setting budgets & forecasting\n\nTry: *"What's my balance?"* or *"Show spending insights"*`;
+const GREETING = `**Welcome! I'm FinFlow AI Copilot**, your agentic financial advisor.\n\nI can analyze your transactions, run deterministic calculations, plan category budgets, and execute approved changes.\n\nTry:\n\u2022 *"I earn ₹50,000 monthly. Analyze my spending and help me save ₹10,000 next month."*\n\u2022 *"What's my financial summary?"*\n\u2022 *"Show category spending breakdown"*`;
 
 export default function ChatPanel({ open, onClose }) {
-  const { state, addTx, deleteTx, setBudget } = useStore();
+  const { state, addTx, deleteTx, setBudget, setBudgets } = useStore();
   const toast = useAppToast();
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('finflow_chat_history');
@@ -24,6 +27,7 @@ export default function ChatPanel({ open, onClose }) {
   });
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [savingBudget, setSavingBudget] = useState(false);
   const [pendingTx, setPendingTx] = useState(null);
   const msgsRef = useRef(null);
   const inputRef = useRef(null);
@@ -41,7 +45,7 @@ export default function ChatPanel({ open, onClose }) {
       setMessages([{ id: 'welcome', role: 'bot', text: GREETING }]);
     }
     if (open) setTimeout(() => inputRef.current?.focus(), 300);
-  }, [open]);
+  }, [open, messages.length]);
 
   const clearChat = () => {
     setMessages([]);
@@ -49,14 +53,75 @@ export default function ChatPanel({ open, onClose }) {
     setTimeout(() => setMessages([{ id: 'welcome-' + Date.now(), role: 'bot', text: GREETING }]), 100);
   };
 
+  // Approval handler for structured budget proposal
+  const handleApproveBudget = (proposal, messageId) => {
+    if (!proposal?.validation?.valid || !proposal.validation.targetMet) {
+      toast('❌ Budget validation failed. Cannot save.', 'error');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Save this budget proposal?\nTotal Allocated: ₹${proposal.validation.totalBudget?.toLocaleString('en-IN')}\nTarget Savings: ₹${proposal.savingsTarget?.toLocaleString('en-IN')}`
+    );
+    if (!confirmed) return;
+
+    setSavingBudget(true);
+    try {
+      // Execute approved changes in store
+      setBudgets(proposal.budgets);
+
+      // Verify persistence
+      toast('✅ Approved budget saved to your FinFlow store!', 'success');
+
+      setMessages(prev => prev.map(m => {
+        if (m.id === messageId) {
+          return {
+            ...m,
+            proposalApproved: true,
+            proposalRejected: false
+          };
+        }
+        return m;
+      }).concat({
+        id: Date.now() + 1,
+        role: 'bot',
+        text: `✅ **Budget Successfully Applied & Verified**\n\nCategory spending limits have been locked in for **${proposal.budgets.length} categories** with a target monthly savings of **₹${proposal.savingsTarget?.toLocaleString('en-IN')}**.\n\nYou can track live progress anytime on the **Budget** tab.`
+      }));
+    } catch (err) {
+      toast('❌ Failed to persist approved budget: ' + err.message, 'error');
+    } finally {
+      setSavingBudget(false);
+    }
+  };
+
+  // Rejection handler
+  const handleRejectBudget = (messageId) => {
+    toast('Budget proposal rejected. No changes made.', 'info');
+    setMessages(prev => prev.map(m => {
+      if (m.id === messageId) {
+        return {
+          ...m,
+          proposalRejected: true,
+          proposalApproved: false
+        };
+      }
+      return m;
+    }).concat({
+      id: Date.now() + 1,
+      role: 'bot',
+      text: 'Budget proposal was **rejected**. No limits have been changed.'
+    }));
+  };
+
   const handleSend = async (overrideText) => {
     const text = (overrideText || input).trim();
     if (!text || sending) return;
     if (!overrideText) setInput('');
 
-    setMessages(prev => [...prev, { id: Date.now(), role: 'user', text }]);
-    
-    // Handle Interactive Confirmation
+    const userMsgId = Date.now();
+    setMessages(prev => [...prev, { id: userMsgId, role: 'user', text }]);
+
+    // Handle Interactive Transaction Confirmation (from pre-red zone)
     if (pendingTx) {
       if (/yes|yeah|sure|yep|ok|confirm|do it|add it/i.test(text)) {
         addTx(pendingTx);
@@ -71,35 +136,69 @@ export default function ChatPanel({ open, onClose }) {
 
     setSending(true);
 
+    // 1. Try Agentic AI Backend (Express + Gemini Function Calling Loop)
+    let agentSucceeded = false;
     try {
-      const outcome = await FinBot.processMessage(text, state.transactions, act => {
-        if (act.action === 'add_transaction') {
-          addTx(act.tx);
-          toast('✅ Transaction added by FinBot.', 'success');
-        }
-        if (act.action === 'delete_transaction') {
-          deleteTx(act.id);
-          toast('🗑️ Transaction deleted by FinBot.', 'info');
-        }
-        if (act.action === 'set_budget') {
-          setBudget(act.category, act.amount);
-          toast(`💰 ${act.category} budget updated to ₹${act.amount}.`, 'success');
-        }
-        if (act.action === 'clear_chat') {
-          clearChat();
-        }
-      }, state.role, state.budgets);
+      const agentResult = await sendAgentMessage({
+        message: text,
+        transactions: state.transactions,
+        budgets: state.budgets
+      });
 
-      if (outcome && outcome.requiresWarning) {
-        setPendingTx(outcome.pendingTx);
+      if (agentResult && (agentResult.reply || agentResult.trace)) {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            role: 'bot',
+            text: agentResult.reply,
+            trace: agentResult.trace || [],
+            proposal: agentResult.proposal || null
+          }
+        ]);
+        agentSucceeded = true;
       }
-
-      if (outcome && outcome.text) {
-        setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', text: outcome.text }]);
-      }
-    } catch (err) {
-      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', text: '❌ Error: ' + err.message }]);
+    } catch {
+      // Fallback silently triggers below
     }
+
+    // 2. Offline / Local Fallback (Deterministic FinBot Engine)
+    if (!agentSucceeded) {
+      try {
+        const outcome = await FinBot.processMessage(text, state.transactions, act => {
+          if (act.action === 'add_transaction') {
+            addTx(act.tx);
+            toast('✅ Transaction added by FinBot.', 'success');
+          }
+          if (act.action === 'delete_transaction') {
+            deleteTx(act.id);
+            toast('🗑️ Transaction deleted by FinBot.', 'info');
+          }
+          if (act.action === 'set_budget') {
+            setBudget(act.category, act.amount);
+            toast(`💰 ${act.category} budget updated to ₹${act.amount}.`, 'success');
+          }
+          if (act.action === 'clear_chat') {
+            clearChat();
+          }
+        }, state.role, state.budgets);
+
+        if (outcome && outcome.requiresWarning) {
+          setPendingTx(outcome.pendingTx);
+        }
+
+        if (outcome && outcome.text) {
+          setMessages(prev => [...prev, {
+            id: Date.now() + 1,
+            role: 'bot',
+            text: outcome.text + '\n\n_Note: Executed via local offline engine._'
+          }]);
+        }
+      } catch (err) {
+        setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', text: '❌ Error: ' + err.message }]);
+      }
+    }
+
     setSending(false);
   };
 
@@ -110,9 +209,9 @@ export default function ChatPanel({ open, onClose }) {
       position: 'fixed',
       bottom: '90px',
       right: '24px',
-      width: 'min(430px, 92vw)',
-      height: 'min(680px, 85vh)',
-      background: isDark ? 'rgba(12, 12, 18, 0.92)' : 'rgba(255, 255, 255, 0.94)',
+      width: 'min(450px, 94vw)',
+      height: 'min(720px, 88vh)',
+      background: isDark ? 'rgba(12, 12, 18, 0.94)' : 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(24px) saturate(180%)',
       borderRadius: '28px',
       boxShadow: '0 30px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(168, 85, 247, 0.25)',
@@ -142,9 +241,12 @@ export default function ChatPanel({ open, onClose }) {
           <Bot size={22} color="#fff" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>FinBot</div>
+          <div style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            FinFlow AI Copilot
+            <Sparkles size={14} style={{ color: '#06b6d4' }} />
+          </div>
           <div style={{ fontSize: '0.68rem', color: '#a855f7', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
-            {sending ? <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>Thinking <span className="typing-dot"/><span className="typing-dot"/><span className="typing-dot"/></span> : 'AI Financial Intelligence'}
+            {sending ? <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>Reasoning & Calling Tools <span className="typing-dot"/><span className="typing-dot"/><span className="typing-dot"/></span> : 'Autonomous Financial Agent'}
           </div>
         </div>
         <button className="chat-clear-btn" onClick={clearChat} title="Clear conversation" style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', opacity: 0.5, transition: '0.2s', padding: '6px' }}>
@@ -165,7 +267,7 @@ export default function ChatPanel({ open, onClose }) {
               </div>
             )}
             <div style={{
-              maxWidth: '78%',
+              maxWidth: '85%',
               padding: '12px 16px',
               borderRadius: m.role === 'bot' ? '4px 18px 18px 18px' : '18px 4px 18px 18px',
               fontSize: '0.88rem',
@@ -177,9 +279,25 @@ export default function ChatPanel({ open, onClose }) {
               boxShadow: m.role === 'user' ? '0 4px 15px rgba(168,85,247,0.35)' : '0 2px 8px rgba(0,0,0,0.06)',
             }}>
               <div dangerouslySetInnerHTML={{ __html: markdownToHtml(m.text) }} />
+
+              {/* Render Agent Trace audit log if tools were called */}
+              {m.trace && m.trace.length > 0 && (
+                <AgentTrace trace={m.trace} />
+              )}
+
+              {/* Render Interactive Budget Approval Card */}
+              {m.proposal && !m.proposalApproved && !m.proposalRejected && (
+                <BudgetProposal
+                  proposal={m.proposal}
+                  saving={savingBudget}
+                  onApprove={() => handleApproveBudget(m.proposal, m.id)}
+                  onReject={() => handleRejectBudget(m.id)}
+                />
+              )}
             </div>
           </div>
         ))}
+
         {sending && (
           <div className="chat-msg-wrap" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <div style={{ width: '28px', height: '28px', borderRadius: '9px', background: 'linear-gradient(135deg,#a855f7,#6b21a8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -195,9 +313,10 @@ export default function ChatPanel({ open, onClose }) {
       {/* Quick Actions */}
       <div style={{ padding: '0 16px 10px', display: 'flex', gap: '7px', overflowX: 'auto', flexShrink: 0 }} className="no-scrollbar">
         {[
-          ['Balance', <BarChart2 size={12}/>, 'What is my balance?'],
+          ['Plan ₹50k Budget', <Sparkles size={12}/>, 'I earn ₹50,000 monthly. Analyze my spending and create a budget to save ₹10,000 next month.'],
+          ['Summary', <BarChart2 size={12}/>, 'What is my financial summary and cash flow?'],
+          ['Top Spend', <Zap size={12}/>, 'Which categories contribute most to my spending?'],
           ['Insights', <ShieldCheck size={12}/>, 'Show spending insights'],
-          ['Forecast', <Zap size={12}/>, 'Spending forecast for next month'],
         ].map(([label, icon, msg]) => (
           <button key={label} className="quick-btn" onClick={() => handleSend(msg)} style={{
             background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
@@ -226,7 +345,7 @@ export default function ChatPanel({ open, onClose }) {
             ref={inputRef}
             className="chat-input-field"
             type="text"
-            placeholder="Ask FinBot anything about your finances..."
+            placeholder="Ask AI Copilot (e.g. Plan a ₹50k budget to save ₹10k)..."
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}

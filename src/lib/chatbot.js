@@ -1,4 +1,7 @@
-'use strict';
+import { calculateRegretIndex } from './regretIndex';
+import { evaluateLocalBenchmark } from './benchmarks';
+import { generateSpendingDNAVectors } from './spendingDNA';
+import { calculateFutureImpact, generateFutureSelfDialogue } from './futureSelfNegotiation';
 
 export const FinBot = (() => {
 
@@ -70,6 +73,15 @@ export const FinBot = (() => {
       const desc = descRaw || (type === 'income' ? 'Income' : `${category} expense`);
       return { action: 'add_transaction', tx: { id: Date.now(), date: new Date().toISOString().slice(0,10), desc, amount: amt, category, type } };
     }
+
+    // Regret Index & Emotion Mining
+    if (/regret|impulse|emotion|tone|why.*spent|feelings|regret score/i.test(t)) return { action: 'regret_index' };
+
+    // Local Peer Benchmarking
+    if (/compare|peer|others|benchmarks?|percentile|similar earners|how do i compare/i.test(t)) return { action: 'benchmark' };
+
+    // Spending DNA
+    if (/dna|fingerprint|spending signature|visual pattern/i.test(t)) return { action: 'spending_dna' };
 
     // Other intents
     if (/balance|how much.*(have|left|remaining|available)|net worth|current balance/i.test(t)) return { action: 'balance' };
@@ -265,8 +277,53 @@ export const FinBot = (() => {
         ].join('\n');
       }
 
+      case 'regret_index': {
+        const regret = calculateRegretIndex(txs);
+        return [
+          `**Regret Index Analysis (NLP Tone Mining)**`,
+          `• Overall Regret Score : **${regret.overallScore} / 100** (${regret.riskLevel} Risk)`,
+          `• Flagged Regret Spend : **${fmt(regret.totalRegretSpend)}**`,
+          `\n**Emotional Tone Breakdown:**`,
+          `• Impulse Buys     : **${regret.registerBreakdown.impulse || 0}** txs`,
+          `• Stress Purchases : **${regret.registerBreakdown['stress-bought'] || 0}** txs`,
+          `• Treated Myself   : **${regret.registerBreakdown['treated-myself'] || 0}** txs`,
+          `• Essential/Planned: **${(regret.registerBreakdown.necessary || 0) + (regret.registerBreakdown.planned || 0)}** txs`,
+          `\n_Check the Insights tab for your full category regret heatmap._`
+        ].join('\n');
+      }
+
+      case 'benchmark': {
+        const bench = evaluateLocalBenchmark(txs);
+        return [
+          `**Privacy-Preserving Local Benchmarks**`,
+          `_Tier: ${bench.tierLabel}_`,
+          `• Savings Percentile : **Top ${100 - bench.savingsPercentile}%** of peers`,
+          `• ${bench.summaryHeadline}`,
+          `\n**Category Comparison:**`,
+          ...bench.categoryComparisons.slice(0, 4).map(c => `• **${c.category}**: ${c.headline}`)
+        ].join('\n');
+      }
+
+      case 'spending_dna': {
+        const dna = generateSpendingDNAVectors(txs, budgets);
+        return [
+          `**Your Generative Spending DNA**`,
+          `• Unique Hash : **${dna.hash}**`,
+          `• Health Index: **${Math.round(dna.healthIndex * 100)}%**`,
+          `• Vector Count: **8 Polar Axes**`,
+          `\n_View your visual Spending DNA fingerprint on the Dashboard and Insights pages._`
+        ].join('\n');
+      }
+
       case 'add_transaction': {
         const tx = { ...intent.tx, id: Date.now() };
+
+        // Pre-Red Zone Future-Self Negotiation Trigger
+        const impact = calculateFutureImpact(tx, txs);
+        if (impact.shouldTriggerNegotiation && tx.type === 'expense') {
+          const dialogue = generateFutureSelfDialogue(impact, tx);
+          return { requiresWarning: true, text: `${dialogue}\n\nDo you want to proceed with this expense? (Yes/No)`, pendingTx: tx };
+        }
         
         let warningMsg = null;
         if (['Entertainment', 'Shopping'].includes(tx.category) && tx.amount > 500) {
