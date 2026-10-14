@@ -36,3 +36,6 @@ db.json
 
 # Vite
 .vite
+
+# Archives
+*.zip
