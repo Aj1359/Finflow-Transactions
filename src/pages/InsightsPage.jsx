@@ -2,6 +2,8 @@
 
 import { useStore } from '../store/useFinFlowStore';
 import InsightCards from '../components/insights/InsightCards';
+import RegretIndexWidget from '../components/insights/RegretIndexWidget';
+import LocalBenchmarkWidget from '../components/insights/LocalBenchmarkWidget';
 import AlertsList from '../components/insights/AlertsList';
 import MonthlyChart from '../components/charts/MonthlyChart';
 import CategoryBars from '../components/dashboard/CategoryBars';
@@ -15,12 +17,16 @@ export default function InsightsPage() {
     <section className={`section${isActive ? ' active' : ''}`} id="section-insights">
       <div className="section-header">
         <div>
-          <h2>Insights</h2>
-          <p>Understanding your spending patterns</p>
+          <h2>Insights & Behavioral Intelligence</h2>
+          <p>Understanding your emotional tone, spending habits & peer benchmark rank</p>
         </div>
       </div>
 
       <InsightCards />
+      
+      {/* Novel Behavioral Finance Features */}
+      <RegretIndexWidget />
+      <LocalBenchmarkWidget />
 
       <div className="charts-grid">
         <MonthlyChart />
