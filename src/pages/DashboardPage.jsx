@@ -3,6 +3,7 @@
 import { useStore } from '../store/useFinFlowStore';
 import SummaryCards from '../components/dashboard/SummaryCards';
 import SpendingGauge from '../components/dashboard/SpendingGauge';
+import SpendingDNA from '../components/dashboard/SpendingDNA';
 import RecentTransactions from '../components/dashboard/RecentTransactions';
 import CategoryBars from '../components/dashboard/CategoryBars';
 import TrendChart from '../components/charts/TrendChart';
@@ -26,6 +27,7 @@ export default function DashboardPage() {
 
       <SummaryCards />
       <SpendingGauge />
+      <SpendingDNA />
 
       <div className="charts-grid">
         <TrendChart />
