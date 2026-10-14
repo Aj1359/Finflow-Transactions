@@ -2,6 +2,8 @@
 import { createContext, useContext, useReducer, useCallback } from 'react';
 import { SEED_DATA, LS_KEYS } from '../lib/constants';
 
+import { classifyTransactionTone } from '../lib/regretIndex';
+
 /* ── Initial State ── */
 function loadState() {
   try {
@@ -9,8 +11,18 @@ function loadState() {
     const savedRole  = localStorage.getItem(LS_KEYS.ROLE);
     const savedTheme = localStorage.getItem(LS_KEYS.THEME);
     const savedBudgets = localStorage.getItem(LS_KEYS.BUDGETS);
+    
+    // Auto-enrich transactions missing emotional tags
+    const loadedTx = (savedTx ? JSON.parse(savedTx) : [...SEED_DATA]).map(t => {
+      if (t.type === 'expense' && !t.emotionalTag) {
+        const tone = classifyTransactionTone(t.desc, t.category, t.amount);
+        return { ...t, emotionalTag: tone.tag, regretScore: tone.score, regretReason: tone.reason };
+      }
+      return t;
+    });
+
     return {
-      transactions:  savedTx ? JSON.parse(savedTx) : [...SEED_DATA],
+      transactions:  loadedTx,
       role:          savedRole  || 'admin',
       theme:         savedTheme || 'light',
       budgets:       savedBudgets ? JSON.parse(savedBudgets) : {},
@@ -24,7 +36,13 @@ function loadState() {
     };
   } catch {
     return {
-      transactions: [...SEED_DATA],
+      transactions: [...SEED_DATA].map(t => {
+        if (t.type === 'expense' && !t.emotionalTag) {
+          const tone = classifyTransactionTone(t.desc, t.category, t.amount);
+          return { ...t, emotionalTag: tone.tag, regretScore: tone.score, regretReason: tone.reason };
+        }
+        return t;
+      }),
       role: 'admin', theme: 'light', budgets: {},
       sortKey: 'date', sortDir: 'desc',
       filterType: 'all', filterCat: 'all', filterMonth: 'all', search: '', activeSection: 'dashboard',
@@ -43,7 +61,14 @@ function persist(state) {
 function reducer(state, action) {
   switch (action.type) {
     case 'ADD_TX': {
-      const next = { ...state, transactions: [action.tx, ...state.transactions] };
+      const tx = action.tx;
+      if (tx.type === 'expense' && !tx.emotionalTag) {
+        const tone = classifyTransactionTone(tx.desc, tx.category, tx.amount);
+        tx.emotionalTag = tone.tag;
+        tx.regretScore = tone.score;
+        tx.regretReason = tone.reason;
+      }
+      const next = { ...state, transactions: [tx, ...state.transactions] };
       persist(next);
       return next;
     }
