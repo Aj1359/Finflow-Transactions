@@ -57,6 +57,8 @@ function persist(state) {
   localStorage.setItem(LS_KEYS.BUDGETS, JSON.stringify(state.budgets));
 }
 
+export { verifyPersistedBudgets } from '../lib/finance/validators.js';
+
 /* ── Reducer ── */
 function reducer(state, action) {
   switch (action.type) {

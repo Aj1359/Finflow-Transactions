@@ -1,18 +1,35 @@
 import { useState, useRef, useEffect } from 'react';
 import { FinBot } from '../../lib/chatbot';
 import { sendAgentMessage } from '../../lib/agentApi';
-import { useStore } from '../../store/useFinFlowStore';
+import { useStore, verifyPersistedBudgets } from '../../store/useFinFlowStore';
 import { useAppToast } from '../../App';
 import AgentTrace from './AgentTrace';
 import BudgetProposal from './BudgetProposal';
 import { X, Send, Bot, Zap, BarChart2, ShieldCheck, Trash2, Sparkles } from 'lucide-react';
 
-function markdownToHtml(text) {
+/**
+ * Safely escapes HTML special characters to prevent XSS injection
+ */
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Safe markdown parser that sanitizes all raw HTML before applying formatting
+ */
+function safeMarkdownToHtml(text) {
   if (!text) return '';
-  return text
+  const escaped = escapeHtml(text);
+  return escaped
     .replace(/\*\*(.+?)\*\*/g, '<b style="color:var(--text-primary)">$1</b>')
     .replace(/\*(.+?)\*/g, '<i>$1</i>')
     .replace(/_(.+?)_/g, '<i>$1</i>')
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.2);padding:2px 4px;border-radius:4px;font-family:monospace">$1</code>')
     .replace(/\n/g, '<br>');
 }
 
@@ -67,11 +84,17 @@ export default function ChatPanel({ open, onClose }) {
 
     setSavingBudget(true);
     try {
-      // Execute approved changes in store
+      // 1. Execute approved changes in store
       setBudgets(proposal.budgets);
 
-      // Verify persistence
-      toast('✅ Approved budget saved to your FinFlow store!', 'success');
+      // 2. Explicit post-update verification against persistent storage
+      const verified = verifyPersistedBudgets(proposal.budgets);
+      if (!verified) {
+        throw new Error('Storage verification failed: Persisted budget limits in storage do not match the approved proposal.');
+      }
+
+      // 3. Only after verification succeeds, display confirmation & update UI
+      toast('✅ Approved budget verified and saved to your FinFlow store!', 'success');
 
       setMessages(prev => prev.map(m => {
         if (m.id === messageId) {
@@ -85,10 +108,15 @@ export default function ChatPanel({ open, onClose }) {
       }).concat({
         id: Date.now() + 1,
         role: 'bot',
-        text: `✅ **Budget Successfully Applied & Verified**\n\nCategory spending limits have been locked in for **${proposal.budgets.length} categories** with a target monthly savings of **₹${proposal.savingsTarget?.toLocaleString('en-IN')}**.\n\nYou can track live progress anytime on the **Budget** tab.`
+        text: `✅ **Budget Successfully Applied & Verified**\n\nCategory spending limits have been locked into verified storage for **${proposal.budgets.length} categories** with a target monthly savings of **₹${proposal.savingsTarget?.toLocaleString('en-IN')}**.\n\nYou can track live progress anytime on the **Budget** tab.`
       }));
     } catch (err) {
-      toast('❌ Failed to persist approved budget: ' + err.message, 'error');
+      toast('❌ Verification error: ' + err.message, 'error');
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        role: 'bot',
+        text: `❌ **Failed to verify budget persistence:** ${err.message}`
+      }]);
     } finally {
       setSavingBudget(false);
     }
@@ -278,7 +306,7 @@ export default function ChatPanel({ open, onClose }) {
               color: m.role === 'bot' ? 'var(--text-primary)' : '#fff',
               boxShadow: m.role === 'user' ? '0 4px 15px rgba(168,85,247,0.35)' : '0 2px 8px rgba(0,0,0,0.06)',
             }}>
-              <div dangerouslySetInnerHTML={{ __html: markdownToHtml(m.text) }} />
+              <div dangerouslySetInnerHTML={{ __html: safeMarkdownToHtml(m.text) }} />
 
               {/* Render Agent Trace audit log if tools were called */}
               {m.trace && m.trace.length > 0 && (

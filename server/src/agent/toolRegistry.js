@@ -33,13 +33,19 @@ export function createToolRegistry(context) {
       return calculateMonthlySummary(transactions, month);
     },
 
-    propose_budget: ({ income, savingsTarget = 0 }) => {
+    propose_budget: (args = {}) => {
+      const income = args.income ?? args.monthlyIncome;
+      const savingsTarget = args.savingsTarget ?? args.targetSavings ?? 0;
       const categorySpending = calculateCategorySpending(transactions);
       return proposeBudget({ income, savingsTarget, categorySpending });
     },
 
-    validate_budget: ({ income, savingsTarget, budgets: proposed }) =>
-      validateBudget({ income, savingsTarget, budgets: proposed }),
+    validate_budget: (args = {}) => {
+      const income = args.income ?? args.monthlyIncome;
+      const savingsTarget = args.savingsTarget ?? args.targetSavings ?? 0;
+      const proposed = args.budgets ?? [];
+      return validateBudget({ income, savingsTarget, budgets: proposed });
+    },
 
     get_existing_budgets: () => ({ budgets })
   };

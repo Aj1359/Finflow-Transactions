@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { createToolRegistry } from "./toolRegistry.js";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const MODEL = "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const MAX_TURNS = 6;
 
 const toolDeclarations = [
