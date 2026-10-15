@@ -99,3 +99,9 @@ export const FINFLOW_TOOLS = [
     }
   }
 ];
+
+export const toolDeclarations = FINFLOW_TOOLS.map(({ name, description, parameters }) => ({
+  name,
+  description,
+  parameters
+}));

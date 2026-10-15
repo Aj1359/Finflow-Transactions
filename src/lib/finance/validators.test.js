@@ -198,4 +198,38 @@ test("verifyPersistedBudgets confirms matched vs mismatched stored values", () =
     { category: "Housing", amount: 12000 } // expected 15000
   ]);
   assert.equal(mismatchResult, false);
+
+  // Exact match succeeds when categories match exactly
+  assert.equal(verifyPersistedBudgets([
+    { category: "Food", amount: 8000 },
+    { category: "Housing", amount: 15000 }
+  ], { exact: true }), true);
+
+  // Stale extra category causes exact match to fail (preventing zombie budget limits)
+  mockStorage.finflow_budgets = JSON.stringify({
+    Food: 8000,
+    Housing: 15000,
+    StaleOldCategory: 3000 // leftover category from previous month
+  });
+
+  const staleResult = verifyPersistedBudgets([
+    { category: "Food", amount: 8000 },
+    { category: "Housing", amount: 15000 }
+  ], { exact: true });
+  assert.equal(staleResult, false, "Must reject persistence when stale/extraneous categories remain in storage");
+});
+
+// 8. Shared Tool Schemas & Function Declarations Consistency Test
+test("toolDeclarations correctly mirrors FINFLOW_TOOLS contracts without schema drift", async () => {
+  const { FINFLOW_TOOLS, toolDeclarations } = await import("./toolSchemas.js");
+  assert.equal(Array.isArray(toolDeclarations), true);
+  assert.equal(toolDeclarations.length, FINFLOW_TOOLS.length);
+
+  for (let i = 0; i < FINFLOW_TOOLS.length; i++) {
+    const contract = FINFLOW_TOOLS[i];
+    const decl = toolDeclarations[i];
+    assert.equal(decl.name, contract.name);
+    assert.equal(decl.description, contract.description);
+    assert.deepEqual(decl.parameters, contract.parameters);
+  }
 });

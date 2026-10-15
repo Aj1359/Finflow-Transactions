@@ -471,7 +471,7 @@ ${context}`;
 
   function parseAction(text) {
     const m = text.match(/\{[^{}]*"action"\s*:\s*"(add_transaction|set_budget|delete_transaction)"[^{}]*\}/s);
-    if (m) { try { return JSON.parse(m[0]); } catch {} }
+    if (m) { try { return JSON.parse(m[0]); } catch { /* ignore malformed JSON */ } }
     return null;
   }
 

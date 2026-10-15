@@ -58,6 +58,55 @@ function persist(state) {
 }
 
 export { verifyPersistedBudgets } from '../lib/finance/validators.js';
+import { verifyPersistedBudgets } from '../lib/finance/validators.js';
+
+/**
+ * Synchronously writes, verifies, and confirms budget limits in one atomic operation
+ */
+export function applyAndVerifyBudgets(budgets, { replace = true } = {}) {
+  const cleanBudgets = {};
+  if (Array.isArray(budgets)) {
+    budgets.forEach(b => {
+      if (b.category && Number.isFinite(b.amount)) {
+        cleanBudgets[b.category] = b.amount;
+      }
+    });
+  } else if (budgets && typeof budgets === 'object') {
+    Object.entries(budgets).forEach(([cat, amt]) => {
+      if (Number.isFinite(amt)) cleanBudgets[cat] = amt;
+    });
+  }
+
+  let targetBudgets = cleanBudgets;
+  if (!replace) {
+    try {
+      const existing = JSON.parse(localStorage.getItem(LS_KEYS.BUDGETS) || '{}');
+      targetBudgets = { ...existing, ...cleanBudgets };
+    } catch {
+      targetBudgets = cleanBudgets;
+    }
+  }
+
+  try {
+    localStorage.setItem(LS_KEYS.BUDGETS, JSON.stringify(targetBudgets));
+  } catch (err) {
+    return { success: false, error: `Failed to write to persistent storage: ${err.message}` };
+  }
+
+  const isVerified = verifyPersistedBudgets(targetBudgets, { exact: replace, storageKey: LS_KEYS.BUDGETS });
+  if (!isVerified) {
+    return {
+      success: false,
+      error: 'Storage verification failed: Stored budgets do not match approved proposal.'
+    };
+  }
+
+  return {
+    success: true,
+    budgets: targetBudgets,
+    count: Object.keys(targetBudgets).length
+  };
+}
 
 /* ── Reducer ── */
 function reducer(state, action) {
@@ -101,13 +150,17 @@ function reducer(state, action) {
       return next;
     }
     case 'SET_BUDGETS': {
-      let updatedBudgets = { ...state.budgets };
+      let updatedBudgets = action.replace ? {} : { ...state.budgets };
       if (Array.isArray(action.budgets)) {
         action.budgets.forEach(b => {
-          if (b.category) updatedBudgets[b.category] = b.amount;
+          if (b.category && Number.isFinite(b.amount)) {
+            updatedBudgets[b.category] = b.amount;
+          }
         });
       } else if (action.budgets && typeof action.budgets === 'object') {
-        updatedBudgets = { ...updatedBudgets, ...action.budgets };
+        Object.entries(action.budgets).forEach(([cat, amt]) => {
+          if (Number.isFinite(amt)) updatedBudgets[cat] = amt;
+        });
       }
       const next = { ...state, budgets: updatedBudgets };
       persist(next);
@@ -139,12 +192,19 @@ export function FinFlowProvider({ children }) {
   const setTheme = useCallback(theme => dispatch({ type: 'SET_THEME', theme }), []);
   const setBudget = useCallback((category, amount) => dispatch({ type: 'SET_BUDGET', category, amount }), []);
   const setBudgets = useCallback(budgets => dispatch({ type: 'SET_BUDGETS', budgets }), []);
+  const replaceBudgets = useCallback(budgets => {
+    const result = applyAndVerifyBudgets(budgets, { replace: true });
+    if (result.success) {
+      dispatch({ type: 'SET_BUDGETS', budgets: result.budgets, replace: true });
+    }
+    return result;
+  }, []);
   const navigate = useCallback(section => dispatch({ type: 'NAVIGATE', section }), []);
   const setSort  = useCallback((key, dir) => dispatch({ type: 'SET_SORT', key, dir }), []);
   const setFilter = useCallback((field, value) => dispatch({ type: 'SET_FILTER', field, value }), []);
 
   return (
-    <StoreCtx.Provider value={{ state, addTx, deleteTx, resetTx, setRole, setTheme, setBudget, setBudgets, navigate, setSort, setFilter }}>
+    <StoreCtx.Provider value={{ state, addTx, deleteTx, resetTx, setRole, setTheme, setBudget, setBudgets, replaceBudgets, navigate, setSort, setFilter }}>
 
       {children}
     </StoreCtx.Provider>

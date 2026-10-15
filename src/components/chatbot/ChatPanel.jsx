@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { FinBot } from '../../lib/chatbot';
 import { sendAgentMessage } from '../../lib/agentApi';
-import { useStore, verifyPersistedBudgets } from '../../store/useFinFlowStore';
+import { useStore, applyAndVerifyBudgets } from '../../store/useFinFlowStore';
 import { useAppToast } from '../../App';
 import AgentTrace from './AgentTrace';
 import BudgetProposal from './BudgetProposal';
@@ -36,7 +36,7 @@ function safeMarkdownToHtml(text) {
 const GREETING = `**Welcome! I'm FinFlow AI Copilot**, your agentic financial advisor.\n\nI can analyze your transactions, run deterministic calculations, plan category budgets, and execute approved changes.\n\nTry:\n\u2022 *"I earn ₹50,000 monthly. Analyze my spending and help me save ₹10,000 next month."*\n\u2022 *"What's my financial summary?"*\n\u2022 *"Show category spending breakdown"*`;
 
 export default function ChatPanel({ open, onClose }) {
-  const { state, addTx, deleteTx, setBudget, setBudgets } = useStore();
+  const { state, addTx, deleteTx, setBudget, replaceBudgets } = useStore();
   const toast = useAppToast();
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('finflow_chat_history');
@@ -70,8 +70,13 @@ export default function ChatPanel({ open, onClose }) {
     setTimeout(() => setMessages([{ id: 'welcome-' + Date.now(), role: 'bot', text: GREETING }]), 100);
   };
 
-  // Approval handler for structured budget proposal
+  // Approval handler for structured budget proposal: Executes changes and verifies persistence
   const handleApproveBudget = (proposal, messageId) => {
+    if (!proposal || !Array.isArray(proposal.budgets)) {
+      toast('Invalid budget proposal.', 'error');
+      return;
+    }
+
     if (!proposal?.validation?.valid || !proposal.validation.targetMet) {
       toast('❌ Budget validation failed. Cannot save.', 'error');
       return;
@@ -84,16 +89,16 @@ export default function ChatPanel({ open, onClose }) {
 
     setSavingBudget(true);
     try {
-      // 1. Execute approved changes in store
-      setBudgets(proposal.budgets);
+      // 1. Atomic write, stale category purge & synchronous persistence verification
+      const saveResult = replaceBudgets
+        ? replaceBudgets(proposal.budgets)
+        : applyAndVerifyBudgets(proposal.budgets, { replace: true });
 
-      // 2. Explicit post-update verification against persistent storage
-      const verified = verifyPersistedBudgets(proposal.budgets);
-      if (!verified) {
-        throw new Error('Storage verification failed: Persisted budget limits in storage do not match the approved proposal.');
+      if (!saveResult || !saveResult.success) {
+        throw new Error(saveResult?.error || 'Storage verification failed: Persisted budget limits do not match approved proposal.');
       }
 
-      // 3. Only after verification succeeds, display confirmation & update UI
+      // 2. Only after verification succeeds, display confirmation & update UI
       toast('✅ Approved budget verified and saved to your FinFlow store!', 'success');
 
       setMessages(prev => prev.map(m => {
@@ -108,7 +113,7 @@ export default function ChatPanel({ open, onClose }) {
       }).concat({
         id: Date.now() + 1,
         role: 'bot',
-        text: `✅ **Budget Successfully Applied & Verified**\n\nCategory spending limits have been locked into verified storage for **${proposal.budgets.length} categories** with a target monthly savings of **₹${proposal.savingsTarget?.toLocaleString('en-IN')}**.\n\nYou can track live progress anytime on the **Budget** tab.`
+        text: `✅ **Budget Successfully Applied & Verified**\n\nCategory spending limits have been locked into verified storage for **${saveResult.count || proposal.budgets.length} categories** with a target monthly savings of **₹${proposal.savingsTarget?.toLocaleString('en-IN')}**.\n\nStale prior categories have been purged and you can track live progress anytime on the **Budget** tab.`
       }));
     } catch (err) {
       toast('❌ Verification error: ' + err.message, 'error');

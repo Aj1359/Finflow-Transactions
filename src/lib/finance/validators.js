@@ -79,10 +79,18 @@ export function validateToolArgs(toolName, args = {}) {
     case 'validate_budget': {
       const income = args.income ?? args.monthlyIncome;
       if (!Number.isFinite(income) || income < 0) {
-        errors.push('Parameter "income" must be non-negative.');
+        errors.push('Parameter "income" must be a non-negative number.');
       }
       if (!Array.isArray(args.budgets)) {
         errors.push('Parameter "budgets" must be an array.');
+      } else {
+        for (let i = 0; i < args.budgets.length; i++) {
+          const item = args.budgets[i];
+          if (!item || typeof item !== 'object' || !item.category || !Number.isFinite(item.amount) || item.amount < 0) {
+            errors.push(`Budget item at index ${i} must have valid category and non-negative amount.`);
+            break;
+          }
+        }
       }
       break;
     }
@@ -103,23 +111,48 @@ export function validateToolArgs(toolName, args = {}) {
 }
 
 /**
- * Explicitly verifies that budgets are accurately persisted in storage
+ * Explicitly verifies that budgets are accurately persisted in storage.
+ * If options.exact is true, also asserts that no extraneous or stale categories remain.
  */
-export function verifyPersistedBudgets(expectedBudgets, storageKey = BUDGETS_STORAGE_KEY) {
+export function verifyPersistedBudgets(expectedBudgets, options = {}) {
+  const storageKey = typeof options === 'string' ? options : (options.storageKey || BUDGETS_STORAGE_KEY);
+  const exact = typeof options === 'object' && options.exact === true;
+
   try {
     if (typeof localStorage === 'undefined') return false;
     const raw = localStorage.getItem(storageKey);
     if (!raw) return false;
     const stored = JSON.parse(raw);
-    const budgetsArray = Array.isArray(expectedBudgets)
-      ? expectedBudgets
-      : Object.entries(expectedBudgets).map(([category, amount]) => ({ category, amount }));
+    if (!stored || typeof stored !== 'object') return false;
 
-    for (const item of budgetsArray) {
-      if (stored[item.category] !== item.amount) {
+    // Normalize expected budgets into a unique category -> amount map
+    const expectedMap = {};
+    if (Array.isArray(expectedBudgets)) {
+      for (const item of expectedBudgets) {
+        if (item && item.category) {
+          expectedMap[item.category] = item.amount;
+        }
+      }
+    } else if (expectedBudgets && typeof expectedBudgets === 'object') {
+      Object.assign(expectedMap, expectedBudgets);
+    } else {
+      return false;
+    }
+
+    const expectedKeys = Object.keys(expectedMap);
+    for (const cat of expectedKeys) {
+      if (stored[cat] !== expectedMap[cat]) {
         return false;
       }
     }
+
+    if (exact) {
+      const storedKeys = Object.keys(stored);
+      if (storedKeys.length !== expectedKeys.length) {
+        return false;
+      }
+    }
+
     return true;
   } catch {
     return false;

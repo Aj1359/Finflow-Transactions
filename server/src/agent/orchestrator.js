@@ -1,91 +1,11 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { createToolRegistry } from "./toolRegistry.js";
+import { toolDeclarations } from "../../../src/lib/finance/toolSchemas.js";
+import { validateToolArgs } from "../../../src/lib/finance/validators.js";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const MAX_TURNS = 6;
-
-const toolDeclarations = [
-  {
-    name: "get_financial_summary",
-    description: "Calculate income, expenses, net balance and savings rate from transactions.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {}
-    }
-  },
-  {
-    name: "get_category_spending",
-    description: "Retrieve expense totals grouped and ranked by category.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {}
-    }
-  },
-  {
-    name: "get_monthly_summary",
-    description: "Calculate income and expenses for a specific month.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        month: {
-          type: Type.STRING,
-          description: "Month in YYYY-MM format."
-        }
-      },
-      required: ["month"]
-    }
-  },
-  {
-    name: "propose_budget",
-    description: "Create a balanced budget proposal scaled to available income and savings target using historical categories.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        income: {
-          type: Type.NUMBER,
-          description: "Monthly income in INR."
-        },
-        savingsTarget: {
-          type: Type.NUMBER,
-          description: "Target savings in INR."
-        }
-      },
-      required: ["income", "savingsTarget"]
-    }
-  },
-  {
-    name: "validate_budget",
-    description: "Mathematically verify proposed category budgets against available income and savings target.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        income: { type: Type.NUMBER },
-        savingsTarget: { type: Type.NUMBER },
-        budgets: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              category: { type: Type.STRING },
-              amount: { type: Type.NUMBER }
-            },
-            required: ["category", "amount"]
-          }
-        }
-      },
-      required: ["income", "savingsTarget", "budgets"]
-    }
-  },
-  {
-    name: "get_existing_budgets",
-    description: "Retrieve the user's current category budgets.",
-    parameters: {
-      type: Type.OBJECT,
-      properties: {}
-    }
-  }
-];
 
 const systemInstruction = `
 You are FinFlow, a careful and analytical personal finance assistant.
@@ -152,6 +72,20 @@ export async function runAgent({ message, transactions = [], budgets = [] }) {
           functionResponse: {
             name,
             response: { error: "Tool not permitted." }
+          }
+        });
+        continue;
+      }
+
+      // Enforce tool argument validation before execution
+      const argValidation = validateToolArgs(name, args);
+      if (!argValidation.valid) {
+        const errorMsg = `Argument validation failed for ${name}: ${argValidation.errors.join("; ")}`;
+        trace.push({ tool: name, status: "error", summary: errorMsg });
+        functionResponses.push({
+          functionResponse: {
+            name,
+            response: { error: errorMsg }
           }
         });
         continue;
